@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="50dp">
+
+    <ImageView
+        android:id="@+id/olaf"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="20dp"/>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="180dp"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingLeft="10dp"
+            android:text=""
+            android:id="@+id/textView1"
+            android:textSize="16sp"
+            android:textColor="#000000"
+            android:gravity="bottom"
+            android:layout_weight="4" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingLeft="10dp"
+            android:text=""
+            android:id="@+id/textView2"
+            android:textSize="16sp"
+            android:textColor="#000000"
+            android:gravity="top"
+            android:layout_weight="4" />
+
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/button1"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginBottom="20dp"
+        android:layout_marginTop="20dp"
+        android:padding="0sp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/call"
+        android:background="@drawable/imgbtn"/>
+
+    <ImageButton
+        android:id="@+id/button2"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="50dp"
+        android:layout_marginBottom="20dp"
+        android:layout_marginTop="20dp"
+        android:src="@drawable/dial"
+        android:padding="0sp"
+        android:scaleType="centerCrop"
+        android:background="@drawable/imgbtn"/>
+
+</LinearLayout>
