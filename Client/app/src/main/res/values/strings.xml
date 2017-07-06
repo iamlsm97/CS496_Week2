@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">CS496_Week2</string>
     <string name="action_settings">Settings</string>
+    <string name="facebook_app_id">843421499143962</string>
 </resources>
