@@ -2,13 +2,9 @@
 ## Project Name: 
 ### Team: 윤형준, 이승민
 
----
 ## 1. Client
-
-
 - Android, java, xml
 
----
 ## 2. Server
 - Node.JS, express.js, mongoDB
 - Server host: 13.124.143.15
