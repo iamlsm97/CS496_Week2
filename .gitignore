@@ -1,0 +1,10 @@
+*.iml
+.gradle
+/Client/local.properties
+/Client/.idea/workspace.xml
+/Client/.idea/libraries
+.DS_Store
+/Client/build
+/Client/captures
+.externalNativeBuild
+/Server/node_modules
