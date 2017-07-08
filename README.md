@@ -54,5 +54,14 @@ $ node app.js
 - GET /api/user/:email/gallery
     - Returns detailed data of specific user's galleries in JSON
 
+- POST /api/adduser
+    - request: {"email": "email"}
+    - response: {"result": 1} for success, {"result": 0} for fail
+    - Add a new user
+
+- PUT /api/:email/addcontact
+    - request: {"name": "name", "number": "number", "profile_image": \<image file>}
+    - response: {"result": 1} for success, {"result": 0} for fail
+    - Add a single contact data to specific user
 
 ### Server Structure
