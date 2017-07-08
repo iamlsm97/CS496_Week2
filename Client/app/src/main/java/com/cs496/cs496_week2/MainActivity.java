@@ -1,25 +1,174 @@
 package com.cs496.cs496_week2;
 
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.ShapeDrawable;
+import android.graphics.drawable.shapes.OvalShape;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.Profile;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
+
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+        implements NavigationView.OnNavigationItemSelectedListener {
+
+    CallbackManager callbackManager;
+    Menu itemMenu;
+
+    String img;
+    String name;
+    String email;
+    Bitmap bitmap;
+
+    @Override
+    public void onBackPressed() {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    public void Refresh() {
+        if (FacebookUserInfo.isLoggedIn()) {
+            GraphRequest graphRequest = GraphRequest.newMeRequest(AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
+                @Override
+                public void onCompleted(JSONObject object, GraphResponse response) {
+                    try {
+                        Log.d("LOGLOG", object.toString());
+                        img = object.getJSONObject("picture").getJSONObject("data").getString("url");
+                        Log.d("img url", img);
+                        name = object.getString("name");
+                        email = object.getString("email");
+
+                        TextView textView = (TextView) findViewById(R.id.header_text);
+                        TextView textView2 = (TextView) findViewById(R.id.header_text2);
+
+                        ImageView imageView = (ImageView) findViewById(R.id.header_image);
+                        if (FacebookUserInfo.isLoggedIn()) {
+                            Thread thread = new Thread() {
+                                public void run() {
+                                    try {
+                                        bitmap = BitmapFactory.decodeStream(new URL(img).openStream());
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            };
+                            thread.start();
+                            textView.setText(name);
+                            textView2.setText(email);
+                            thread.join();
+                            imageView.setImageBitmap(bitmap);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            Bundle parameters = new Bundle();
+            parameters.putString("fields", "id,name,email,picture.type(large)");
+            graphRequest.setParameters(parameters);
+            graphRequest.executeAsync();
+        } else {
+            TextView textView = (TextView) findViewById(R.id.header_text);
+            TextView textView2 = (TextView) findViewById(R.id.header_text2);
+            ImageView imageView = (ImageView) findViewById(R.id.header_image);
+            textView.setText("Android Studio");
+            textView2.setText("android.studio@android.com");
+            imageView.setImageResource(android.R.drawable.sym_def_app_icon);
+        }
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+        callbackManager = CallbackManager.Factory.create();
+
+        if (id == R.id.nav_login) {
+            LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile","user_friends"));
+            LoginManager.getInstance().registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+                @Override
+                public void onSuccess(final LoginResult loginResult) {
+                    itemMenu.findItem(R.id.nav_login).setVisible(!FacebookUserInfo.isLoggedIn());
+                    itemMenu.findItem(R.id.nav_logout).setVisible(FacebookUserInfo.isLoggedIn());
+                    Refresh();
+                }
+
+                @Override
+                public void onCancel() {
+
+                }
+
+                @Override
+                public void onError(FacebookException error) {
+
+                }
+            });
+        } else if (id == R.id.nav_logout) {
+            LoginManager.getInstance().logOut();
+            itemMenu.findItem(R.id.nav_login).setVisible(!FacebookUserInfo.isLoggedIn());
+            itemMenu.findItem(R.id.nav_logout).setVisible(FacebookUserInfo.isLoggedIn());
+            Refresh();
+        }  else if (id == R.id.nav_share) {
+
+        } else if (id == R.id.nav_send) {
+
+        }
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -39,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        FacebookSdk.sdkInitialize(this.getApplicationContext());
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -54,6 +204,21 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView;
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        itemMenu = navigationView.getMenu();
+        itemMenu.findItem(R.id.nav_login).setVisible(!FacebookUserInfo.isLoggedIn());
+        itemMenu.findItem(R.id.nav_logout).setVisible(FacebookUserInfo.isLoggedIn());
+        Refresh();
+
+        navigationView.setNavigationItemSelectedListener(this);
       /*
       FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
       fab.setOnClickListener(new View.OnClickListener() {
@@ -70,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+        getMenuInflater().inflate(R.menu.activity_main_drawer, menu);
         return true;
     }
 
@@ -81,16 +246,8 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
         return super.onOptionsItemSelected(item);
     }
-
-
-
 
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
