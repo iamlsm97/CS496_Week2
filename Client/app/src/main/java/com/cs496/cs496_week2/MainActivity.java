@@ -325,7 +325,7 @@ public class MainActivity extends AppCompatActivity
                 ActivityCompat.requestPermissions(
                         this,
                         new String[]{Manifest.permission.CALL_PHONE, Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                                Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS}, 1
+                                Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS, Manifest.permission.CAMERA}, 1
                 );
             }
         }
