@@ -1,5 +1,6 @@
 package com.cs496.cs496_week2;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -8,15 +9,18 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -164,11 +168,11 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        callbackManager.onActivityResult(requestCode, resultCode, data);
-    }
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//        callbackManager.onActivityResult(requestCode, resultCode, data);
+//    }
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -187,6 +191,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        askForPermissions();
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(this.getApplicationContext());
         setContentView(R.layout.activity_main);
@@ -216,7 +221,7 @@ public class MainActivity extends AppCompatActivity
         itemMenu = navigationView.getMenu();
         itemMenu.findItem(R.id.nav_login).setVisible(!FacebookUserInfo.isLoggedIn());
         itemMenu.findItem(R.id.nav_logout).setVisible(FacebookUserInfo.isLoggedIn());
-        Refresh();
+//        Refresh();
 
         navigationView.setNavigationItemSelectedListener(this);
       /*
@@ -272,6 +277,9 @@ public class MainActivity extends AppCompatActivity
                 case 2:
                     Tab3 tab3 = new Tab3();
                     return tab3;
+                case 3:
+                    Tab0HttpTest tab0 = new Tab0HttpTest();
+                    return tab0;
                 default:
                     return null;
             }
@@ -280,7 +288,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public int getCount() {
             // Show 3 total pages.
-            return 3;
+            return 4;
         }
 
         @Override
@@ -292,10 +300,35 @@ public class MainActivity extends AppCompatActivity
                     return "갤러리";
                 case 2:
                     return "미디어";
+                case 3:
+                    return "HttpTest";
             }
             return null;
         }
     }
 
     // deleted PlaceholderFragment class form here
+
+
+
+    /* FUNCTION: requests CALL_PHONE and READ_CONTACTS permissions */
+    public void askForPermissions() {
+
+//        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MODE_PRIVATE);
+//        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MODE_PRIVATE);
+
+        /* CALL PHONE, READ_ CONTACTS, WRITE CONTACTS */
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED
+                    || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED
+                    || ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                        this,
+                        new String[]{Manifest.permission.CALL_PHONE, Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                                Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS}, 1
+                );
+            }
+        }
+    }
+
 }
