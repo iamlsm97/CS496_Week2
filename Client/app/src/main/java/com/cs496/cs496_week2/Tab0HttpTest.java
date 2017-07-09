@@ -212,21 +212,28 @@ public class Tab0HttpTest extends Fragment {
         OkHttpClient client = new OkHttpClient();
 
         String put(String url, File file, String name, String number) throws IOException {
-
-            String filenameArray[] = file.getName().split("\\.");
-            String ext = filenameArray[filenameArray.length - 1];
-            RequestBody formBody = new MultipartBody.Builder()
-                    .setType(MultipartBody.FORM)
-                    .addFormDataPart("name", name)
-                    .addFormDataPart("number", number)
-                    .addFormDataPart("profile_image", file.getName(), RequestBody.create(MediaType.parse("image/" + ext), file))
-                    .build();
+            RequestBody formBody;
+            if (file != null) {
+                String filenameArray[] = file.getName().split("\\.");
+                String ext = filenameArray[filenameArray.length - 1];
+                formBody = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("name", name)
+                        .addFormDataPart("number", number)
+                        .addFormDataPart("profile_image", file.getName(), RequestBody.create(MediaType.parse("image/" + ext), file))
+                        .build();
+            } else {
+                formBody = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("name", name)
+                        .addFormDataPart("number", number)
+                        .build();
+            }
 
             Request request = new Request.Builder().url(url).put(formBody).build();
             Response response = client.newCall(request).execute();
             if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
-            String result = response.body().string();
-            return result;
+            return response.body().string();
         }
 
     }
