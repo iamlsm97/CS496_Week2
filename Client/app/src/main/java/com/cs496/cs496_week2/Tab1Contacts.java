@@ -48,8 +48,11 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import static android.app.Activity.RESULT_OK;
@@ -71,6 +74,11 @@ public class Tab1Contacts extends Fragment {
     View dialogView = null;
     ImageView showimg = null;
     File add_profile_image = null;
+    String add_new_name = null;
+    String add_new_num = null;
+
+    CustomAdapter adapter;
+    ArrayList<Contact> contact_list = new ArrayList<>();
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         try {
@@ -86,12 +94,14 @@ public class Tab1Contacts extends Fragment {
         } catch (NoSuchAlgorithmException e) {
         }
 
+        contact_list.clear();
+
         view = inflater.inflate(R.layout.tab1_contacts, null);
 
         FloatingActionButton btnAdd = view.findViewById(R.id.fab_add);
 
         ContactArrList = getContactList();
-        final CustomAdapter adapter = new CustomAdapter(this.getActivity(), R.layout.tab1_contacts_layout, ContactArrList);
+        adapter = new CustomAdapter(this.getActivity(), R.layout.tab1_contacts_layout, ContactArrList);
 
         final EditText searchText = (EditText) view.findViewById(R.id.text_search);
         searchText.addTextChangedListener(new TextWatcher() {
@@ -229,7 +239,7 @@ public class Tab1Contacts extends Fragment {
                 sortOrder
         );
 
-        ArrayList<Contact> contact_list = new ArrayList<>();
+
 
         while (contactCursor.moveToNext()) {
             Contact contact_ele = new Contact();
@@ -254,7 +264,6 @@ public class Tab1Contacts extends Fragment {
         }
 
         DBContact = thread.getResult();
-        Log.e("dbdbdb", DBContact.toString());
         for (int i = 0; i < DBContact.length(); i++) {
             JSONObject single = null;
             try {
@@ -300,6 +309,37 @@ public class Tab1Contacts extends Fragment {
         }
     }
 
+    public class PutContact {
+        //        public final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+        OkHttpClient client = new OkHttpClient();
+
+        String put(String url, File file, String name, String number) throws IOException {
+            RequestBody formBody;
+            if (file != null) {
+                String filenameArray[] = file.getName().split("\\.");
+                String ext = filenameArray[filenameArray.length - 1];
+                formBody = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("name", name)
+                        .addFormDataPart("number", number)
+                        .addFormDataPart("profile_image", file.getName(), RequestBody.create(MediaType.parse("image/" + ext), file))
+                        .build();
+            } else {
+                formBody = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("name", name)
+                        .addFormDataPart("number", number)
+                        .build();
+            }
+
+            Request request = new Request.Builder().url(url).put(formBody).build();
+            Response response = client.newCall(request).execute();
+            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            return response.body().string();
+        }
+
+    }
+
     public class CustomThread extends Thread {
         JSONArray dbContact = null;
         final GetContact example = new GetContact();
@@ -321,11 +361,9 @@ public class Tab1Contacts extends Fragment {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            Log.e("response in Thread", dbContact.toString());
         }
 
         public JSONArray getResult() {
-            Log.e("Return in Thread", dbContact.toString());
             return dbContact;
         }
 
@@ -367,7 +405,7 @@ public class Tab1Contacts extends Fragment {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     ContactArrList = getContactList();
-                    CustomAdapter adapter = new CustomAdapter(this.getActivity(), R.layout.tab1_contacts_layout, ContactArrList);
+                    adapter = new CustomAdapter(this.getActivity(), R.layout.tab1_contacts_layout, ContactArrList);
 
                     ListView listview = (ListView) view.findViewById(R.id.list_view);
                     if (listview != null)
@@ -408,13 +446,8 @@ public class Tab1Contacts extends Fragment {
             dialogView = (View) View.inflate(getContext(), R.layout.tab1_contacts_dialog, null);
             showimg = (ImageView) dialogView.findViewById(R.id.showimg);
 
-            final EditText addname = (EditText) dialogView.findViewById(R.id.addname);
-            final EditText addnum = (EditText) dialogView.findViewById(R.id.addnum);
             Button selimg = (Button) dialogView.findViewById(R.id.selimg);
             Button unselimg = (Button) dialogView.findViewById(R.id.unselimg);
-
-            final String name = addname.getText().toString();
-            final String num = addnum.getText().toString();
 
             selimg.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -432,6 +465,7 @@ public class Tab1Contacts extends Fragment {
                 }
             });
 
+
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
             alertDialogBuilder.setTitle("Add New Contact");
             alertDialogBuilder.setView(dialogView);
@@ -439,7 +473,36 @@ public class Tab1Contacts extends Fragment {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
 
-                    Toast.makeText(getContext(), name + num, Toast.LENGTH_SHORT).show();
+                    final EditText addname = (EditText) dialogView.findViewById(R.id.addname);
+                    final EditText addnum = (EditText) dialogView.findViewById(R.id.addnum);
+
+                    add_new_name = addname.getText().toString();
+                    add_new_num = addnum.getText().toString();
+
+                    final PutContact example = new PutContact();
+
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String response = null;
+                            try {
+                                response = example.put("http://13.124.143.15:8080/api/rongrong@sparcs.org/addcontact", add_profile_image, add_new_name, add_new_num);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            Contact contact_ele = new Contact();
+                            contact_ele.phone_num = add_new_num;
+                            contact_ele.name = add_new_name;
+                            contact_list.add(contact_ele);
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    adapter.notifyDataSetChanged();
+                                }
+                            });
+                        }
+                    }).start();
+
                 }
             });
             alertDialogBuilder.setNegativeButton("Cancel", null);
