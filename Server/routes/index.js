@@ -2,6 +2,62 @@
 
 module.exports = function(app, Models, fs, multer)
 {
+
+	// -----Test Code-----
+
+	// Download Image from Url Path
+	app.get('/images/*', function(req, res){
+		console.log(__dirname)
+		console.log(req.protocol)
+		console.log(req.get('host'))
+		console.log(req.originalUrl)
+		console.log(req.protocol+"://"+req.get('host')+req.originalUrl)
+		res.download(__dirname + '/..'+req.originalUrl)
+	})
+
+	// Image Test
+	app.post('/image/:filename',  function(req, res){
+		console.log("-----Image Test-----")
+
+		var storage = multer.diskStorage({
+			destination: function(req, file, cb){
+				cb(null, 'rongrong')
+			},
+			filename: function(req, file, cb){
+				file.uploadFile = {
+					name: req.params.filename,
+					ext: file.mimetype.split('/')[1]
+				}
+				cb(null, file.uploadFile.name+'.'+file.uploadFile.ext)
+			}
+		})
+		var upload = multer({storage: storage}).single('testimage')
+
+		upload(req, res, function(err){
+			return
+			console.log("entered upload")
+			if(err) return res.status(500).json({error: err});
+			console.log(req)
+			console.log(req.file)
+		})
+	})
+
+	// multertest
+	app.post('/multertest', function(req, res){
+		console.log("-----multertest-----")
+		console.log(req.body)
+		console.log(req.body.name)
+		var upload = multer().single("rain")
+		upload(req, res, function(err){
+			if (err) console.log("ERROR ERROR ERROR ERROR ERROR");
+			console.log(req.body.number)
+			console.log(req.file)
+		})
+	})
+
+	// -----Test Code-----
+
+
 	// Check Whether Server is Alive
 	app.get('/', function(req, res){
 		console.log("request to /");
@@ -102,6 +158,11 @@ module.exports = function(app, Models, fs, multer)
 	// Add New User
 	app.post('/api/adduser/', function(req, res){
 		console.log("request to /api/adduser")
+
+		if (req.body.email == null){
+			return res.status(400).json({error: 'email not found in request'});
+		}
+
 		Models.User.findOne({email: req.body.email}, function(err, user){
 			if (err) return res.status(500).json({error: err});
 			if (user) return res.status(406).json({error: 'user already exists'});
@@ -137,46 +198,11 @@ module.exports = function(app, Models, fs, multer)
 		})
 	})
 
-
-
-	// multertest
-	app.post('/multertest', function(req, res){
-		console.log("-----multertest-----")
-		console.log(req.body)
-		console.log(req.body.name)
-		var upload = multer().single("rain")
-		upload(req, res, function(err){
-			if (err) console.log("ERROR ERROR ERROR ERROR ERROR");
-			console.log(req.body.number)
-			console.log(req.file)
-		})
-	})
-
-	
-
 	// Add Contact to User
 	app.put('/api/:email/addcontact', async function(req, res){
 		console.log("request to /api/"+req.params.email+"/addcontact")
 
-		stop = false
 		email = req.params.email
-
-		function fileFilter (req, file, cb){
-			Models.User.findOne({email: email}, function(err, user){
-				if (err) {
-					stop = true
-					cb(null, false)
-					return res.status(500).json({error: err});
-				}
-				if (!user) {
-					stop = true
-					cb(null, false)
-					res.status(404).json({error: 'no such user exists'});
-				}
-				console.log(user)
-			})
-			cb(null, true)
-		}
 
 		var storage = multer.diskStorage({
 			destination: function(req, file, cb){
@@ -191,24 +217,33 @@ module.exports = function(app, Models, fs, multer)
 			}
 		})
 
-
-		var upload = multer({storage: storage, fileFilter: fileFilter}).single('profile_image')
+		var upload = multer({storage: storage}).single('profile_image')
 
 		upload(req, res, function(err){
-			if (stop) return ;
-			if (err) return res.status(500).json({error: err});
+			console.log("into the upload")
+			if (err) return res.status(500).send({error: err});
+
+			if(req.body.number == ""){ 
+				return res.send({error: 'number not found in request'});
+			}
 
 			Models.User.findOne({email: email}, function(err, user){
+				if (err) return res.status(500).send({error: err});	
+				if (!user) {
+					return res.send({error: 'no such user exists'});
+				}
+
 				Models.Contact.findOne({_id: {$in: user.contact}, number: req.body.number}, function(err, contact){
-					if (err) return res.status(500).json({error: err});
+					if (err) return res.status(500).send({error: err});
 					if (!contact) {
 						console.log("Add New User Contact")
 						newcontact = new Models.Contact()
 						newcontact.name = req.body.name
 						newcontact.number = req.body.number
-						console.log(req.file)
-						newcontact.profile_image = 'images/'+email+"/contact/"+req.file.uploadFile.name+'.'+req.file.uploadFile.ext
-
+						if(req.file!=null){
+							console.log(req.file)
+							newcontact.profile_image = 'images/'+email+"/contact/"+req.file.uploadFile.name+'.'+req.file.uploadFile.ext
+						}
 						newcontact.save(function(err){
 							if (err) {
 								console.log(err)
@@ -224,7 +259,12 @@ module.exports = function(app, Models, fs, multer)
 						console.log("Edit Existing User Contact")
 						contact.name = req.body.name
 						contact.number = req.body.number
-						contact.profile_image = 'images/'+email+"/contact/"+req.file.uploadFile.name+'.'+req.file.uploadFile.ext
+						if(req.file!=null){
+							console.log(req.file)
+							contact.profile_image = 'images/'+email+"/contact/"+req.file.uploadFile.name+'.'+req.file.uploadFile.ext
+						} else {
+							contact.profile_image = null
+						}
 
 						contact.save(function(err){
 							if (err) {
@@ -252,55 +292,5 @@ module.exports = function(app, Models, fs, multer)
 		console.log("request to /api/addgallery")
 		res.end()
 	})
-
-
-
-
-
-	
-
-	// Image Test
-	app.post('/image/:filename',  function(req, res){
-		console.log("-----Image Test-----")
-
-		var storage = multer.diskStorage({
-			destination: function(req, file, cb){
-				cb(null, 'rongrong')
-			},
-			filename: function(req, file, cb){
-				file.uploadFile = {
-					name: req.params.filename,
-					ext: file.mimetype.split('/')[1]
-				}
-				cb(null, file.uploadFile.name+'.'+file.uploadFile.ext)
-			}
-		})
-		var upload = multer({storage: storage}).single('testimage')
-
-		upload(req, res, function(err){
-			return
-			console.log("entered upload")
-			if(err) return res.status(500).json({error: err});
-			console.log(req)
-			console.log(req.file)
-		})
-
-
-
-		// upload(req, res, function(err){
-		// 	if(err) return res.status(500).json({error: err})
-		// })
-
-		// upload(req, res).then(function (file) {
-		// 	res.json(file);
-		// }, function (err) {
-		// 	res.send(500, err);
-		// });
-
-	})
-
-
-
-
 
 }
