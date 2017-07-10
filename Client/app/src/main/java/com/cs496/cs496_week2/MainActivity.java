@@ -2,18 +2,15 @@ package com.cs496.cs496_week2;
 
 import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.Signature;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -27,11 +24,9 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -42,7 +37,6 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
-import com.facebook.Profile;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 
@@ -50,8 +44,6 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.URL;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity
@@ -221,7 +213,7 @@ public class MainActivity extends AppCompatActivity
         itemMenu = navigationView.getMenu();
         itemMenu.findItem(R.id.nav_login).setVisible(!FacebookUserInfo.isLoggedIn());
         itemMenu.findItem(R.id.nav_logout).setVisible(FacebookUserInfo.isLoggedIn());
-//        Refresh();
+        //Refresh();
 
         navigationView.setNavigationItemSelectedListener(this);
       /*
@@ -272,12 +264,15 @@ public class MainActivity extends AppCompatActivity
                     Tab1Contacts tab1 = new Tab1Contacts();
                     return tab1;
                 case 1:
-                    Tab2Gallery tab2 = new Tab2Gallery();
+                    Tab2Facebook tab2 = new Tab2Facebook();
                     return tab2;
                 case 2:
-                    Tab3 tab3 = new Tab3();
+                    Tab3Gallery tab3 = new Tab3Gallery();
                     return tab3;
                 case 3:
+                    Tab4 tab4 = new Tab4();
+                    return tab4;
+                case 4:
                     Tab0HttpTest tab0 = new Tab0HttpTest();
                     return tab0;
                 default:
@@ -288,7 +283,7 @@ public class MainActivity extends AppCompatActivity
         @Override
         public int getCount() {
             // Show 3 total pages.
-            return 4;
+            return 5;
         }
 
         @Override
@@ -297,10 +292,12 @@ public class MainActivity extends AppCompatActivity
                 case 0:
                     return "연락처";
                 case 1:
-                    return "갤러리";
+                    return "페이스북";
                 case 2:
-                    return "미디어";
+                    return "갤러리";
                 case 3:
+                    return "미디어";
+                case 4:
                     return "HttpTest";
             }
             return null;

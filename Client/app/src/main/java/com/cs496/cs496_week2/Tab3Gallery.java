@@ -2,7 +2,6 @@ package com.cs496.cs496_week2;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -75,7 +74,7 @@ import static android.app.Activity.RESULT_OK;
  * Created by rongrong on 2017-07-06.
  */
 
-public class Tab2Gallery extends Fragment {
+public class Tab3Gallery extends Fragment {
     private static final int MY_PERMISSIONS_REQUEST_CAMERA = 530;
     private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 531;
 
@@ -144,7 +143,7 @@ public class Tab2Gallery extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.tab2_gallery, container, false);
+        view = inflater.inflate(R.layout.tab3_gallery, container, false);
 
         ImageButton picture = (ImageButton) view.findViewById(R.id.camera);
 
