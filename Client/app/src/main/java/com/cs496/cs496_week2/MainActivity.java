@@ -291,8 +291,8 @@ public class MainActivity extends AppCompatActivity
                     Tab4 tab4 = new Tab4();
                     return tab4;
                 case 4:
-                    Tab5 tab5 = new Tab5();
-                    return tab5;
+                    Tab0HttpTest tab0 = new Tab0HttpTest();
+                    return tab0;
                 default:
                     return null;
             }
@@ -316,7 +316,7 @@ public class MainActivity extends AppCompatActivity
                 case 3:
                     return "미디어";
                 case 4:
-                    return "HttpTest";
+                    return "Http";
             }
             return null;
         }
