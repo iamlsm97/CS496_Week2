@@ -51,43 +51,47 @@ public class Tab2Facebook extends Fragment {
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.tab2_facebook, null);
-        if (ContactArrList == null) {
-            ContactArrList = getContactList();
+        if (FacebookUserInfo.isLoggedIn()) {
+            view = inflater.inflate(R.layout.tab2_facebook, null);
+            if (ContactArrList == null) {
+                ContactArrList = getContactList();
+            }
+
+            fbContact new_contact = new fbContact();
+            new_contact.name = "hello2";
+            ContactArrList.add(new_contact);
+
+            for (int i = 0; i < ContactArrList.size(); i++) {
+                Log.d("contactlist", ContactArrList.get(i).name);
+            }
+
+            final CustomAdapter adapter = new CustomAdapter(this.getActivity(), R.layout.tab2_contacts_layout, ContactArrList);
+
+            final EditText searchText = (EditText) view.findViewById(R.id.fb_text_search);
+            searchText.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    String search_text = s.toString();
+                    adapter.filter(search_text);
+                }
+            });
+
+            ListView listview = (ListView) view.findViewById(R.id.fb_list_view);
+            if (listview != null)
+                listview.setAdapter(adapter);
+        } else {
+            view = inflater.inflate(R.layout.tab2_facebook_logout, null);
         }
-
-        fbContact new_contact = new fbContact();
-        new_contact.name = "hello2";
-        ContactArrList.add(new_contact);
-
-        for (int i=0;i<ContactArrList.size();i++) {
-            Log.d("contactlist", ContactArrList.get(i).name);
-        }
-
-        final CustomAdapter adapter = new CustomAdapter(this.getActivity(), R.layout.tab2_contacts_layout, ContactArrList);
-
-        final EditText searchText = (EditText) view.findViewById(R.id.fb_text_search);
-        searchText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                String search_text = s.toString();
-                adapter.filter(search_text);
-            }
-        });
-
-        ListView listview = (ListView) view.findViewById(R.id.fb_list_view);
-        if (listview != null)
-            listview.setAdapter(adapter);
         return view;
     }
 

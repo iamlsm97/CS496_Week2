@@ -37,6 +37,7 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
+import com.facebook.internal.CallbackManagerImpl;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 
@@ -129,6 +130,7 @@ public class MainActivity extends AppCompatActivity
             LoginManager.getInstance().registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
                 @Override
                 public void onSuccess(final LoginResult loginResult) {
+                    Log.e("onSuccess", "onSuccess");
                     itemMenu.findItem(R.id.nav_login).setVisible(!FacebookUserInfo.isLoggedIn());
                     itemMenu.findItem(R.id.nav_logout).setVisible(FacebookUserInfo.isLoggedIn());
                     Refresh();
@@ -160,11 +162,16 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        callbackManager.onActivityResult(requestCode, resultCode, data);
-//    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == CallbackManagerImpl.RequestCodeOffset.Login.toRequestCode()) {
+            //login
+            callbackManager.onActivityResult(requestCode, resultCode, data);
+        }
+
+    }
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
