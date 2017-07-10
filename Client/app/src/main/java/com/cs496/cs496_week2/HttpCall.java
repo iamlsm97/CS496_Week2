@@ -33,6 +33,9 @@ import static android.app.Activity.RESULT_OK;
  */
 
 public class HttpCall extends Activity{
+    private static GetExample getexample = new GetExample();
+    private static PostExample postexample = new PostExample();
+    private static PutExample putexample = new PutExample();
 
     private static File proimg = null;
     private static String method;
@@ -130,71 +133,97 @@ public class HttpCall extends Activity{
         Log.d("METHOD", method);
         Log.d("URL", urltext);
         if (method.equals("GET")) {
-            final GetExample example = new GetExample();
+           getexample = new GetExample();
             response = null;
 
-            new Thread(new textThread(response) {
-                @Override
-                public void run() {
-                    try {
-                        response = example.run("http://13.124.143.15:8080" + urltext);
-                        Log.d("RESPONSE", response);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    Runnable r = new textThread(response);
-                }
-            }).start();
+            getThread mThread = new getThread();
+            mThread.start();
+            try {
+                mThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return mThread.getResponse();
 
         } else if (method.equals("POST")) {
-            final PostExample example = new PostExample();
+            postexample = new PostExample();
             response = null;
 
-            new Thread(new textThread(response) {
-                @Override
-                public void run() {
-                    try {
-                        response = example.post("http://13.124.143.15:8080" + urltext, body);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
+            postThread mThread = new postThread();
+            mThread.start();
+            try {
+                mThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return mThread.getResponse();
 
         } else if (method.equals("PUT")) {
-            final PutExample example = new PutExample();
+            putexample = new PutExample();
             response = null;
 
-            new Thread(new textThread(response) {
-                @Override
-                public void run() {
-                    try {
-                        response = example.put("http://13.124.143.15:8080" + urltext, proimg, name, number);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
+            putThread mThread = new putThread();
+            mThread.start();
+            try {
+                mThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return mThread.getResponse();
 
         }
-
-        return textThread.getTxt();
+        return null;
     }
 
-    public static class textThread implements Runnable {
-        static String restext = null;
-
-        public textThread(String text) {
-            restext = text;
-        }
-
-        public static String getTxt() {
-            return restext;
-        }
+    public static class putThread extends Thread {
+        static String response;
 
         @Override
         public void run() {
+            try {
+                response = putexample.put("http://13.124.143.15:8080" + urltext, proimg, name, number);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
+        public String getResponse() {
+            return response;
+        }
+    }
+
+    public static class postThread extends Thread {
+        static String response;
+
+        @Override
+        public void run() {
+            try {
+                response = postexample.post("http://13.124.143.15:8080" + urltext, body);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public String getResponse() {
+            return response;
+        }
+    }
+
+    public static class getThread extends Thread {
+        static String response;
+
+        @Override
+        public void run() {
+            try {
+                response = getexample.run("http://13.124.143.15:8080" + urltext);
+                Log.d("RESPONSE", response);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public String getResponse() {
+            return response;
         }
     }
 }
