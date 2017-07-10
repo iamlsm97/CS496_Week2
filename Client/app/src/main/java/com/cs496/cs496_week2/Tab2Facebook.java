@@ -1,15 +1,11 @@
 package com.cs496.cs496_week2;
 
 import android.content.Context;
-import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -18,9 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -43,9 +37,9 @@ import java.util.Locale;
  */
 
 public class Tab2Facebook extends Fragment {
-    ArrayList<fbContact> ContactArrList;
-    ArrayList<fbContact> items;
-    ArrayList<fbContact> displayitems = new ArrayList<>();
+    ArrayList<FacebookUserInfo.fbContact> ContactArrList;
+    ArrayList<FacebookUserInfo.fbContact> items;
+    ArrayList<FacebookUserInfo.fbContact> displayitems = new ArrayList<>();
     Bitmap bitmap;
     View view;
 
@@ -53,17 +47,7 @@ public class Tab2Facebook extends Fragment {
                              Bundle savedInstanceState) {
         if (FacebookUserInfo.isLoggedIn()) {
             view = inflater.inflate(R.layout.tab2_facebook, null);
-            if (ContactArrList == null) {
-                ContactArrList = getContactList();
-            }
-
-            fbContact new_contact = new fbContact();
-            new_contact.name = "hello2";
-            ContactArrList.add(new_contact);
-
-            for (int i = 0; i < ContactArrList.size(); i++) {
-                Log.d("contactlist", ContactArrList.get(i).name);
-            }
+            ContactArrList = FacebookUserInfo.getContactArrayList();
 
             final CustomAdapter adapter = new CustomAdapter(this.getActivity(), R.layout.tab2_contacts_layout, ContactArrList);
 
@@ -90,12 +74,12 @@ public class Tab2Facebook extends Fragment {
             if (listview != null)
                 listview.setAdapter(adapter);
         } else {
-            view = inflater.inflate(R.layout.tab2_facebook_logout, null);
+            view = inflater.inflate(R.layout._logout, null);
         }
         return view;
     }
 
-    private class CustomAdapter extends ArrayAdapter<fbContact> {
+    private class CustomAdapter extends ArrayAdapter<FacebookUserInfo.fbContact> {
         public void filter(String searchText) {
             searchText = searchText.toLowerCase(Locale.getDefault());
             displayitems.clear();
@@ -103,7 +87,7 @@ public class Tab2Facebook extends Fragment {
                 displayitems.addAll(items);
             }
             else {
-                for (fbContact item : items) {
+                for (FacebookUserInfo.fbContact item : items) {
                     if (item.name.contains(searchText)) {
                         displayitems.add(item);
                     }
@@ -112,7 +96,7 @@ public class Tab2Facebook extends Fragment {
             notifyDataSetChanged();
         }
 
-        public CustomAdapter(Context context, int textViewResourceId, ArrayList<fbContact> objects) {
+        public CustomAdapter(Context context, int textViewResourceId, ArrayList<FacebookUserInfo.fbContact> objects) {
             super(context, textViewResourceId, objects);
             displayitems = objects;
             items = new ArrayList<>();
@@ -125,7 +109,7 @@ public class Tab2Facebook extends Fragment {
         }
 
         @Override
-        public fbContact getItem(int position) {
+        public FacebookUserInfo.fbContact getItem(int position) {
             return displayitems.get(position);
         }
 
@@ -165,41 +149,5 @@ public class Tab2Facebook extends Fragment {
             textView1.setText(displayitems.get(position).name);
             return v;
         }
-    }
-
-    private ArrayList<fbContact> getContactList() {
-        final ArrayList<fbContact> contact_list = new ArrayList<>();
-
-        final GraphRequest graphRequest2 = GraphRequest.newGraphPathRequest(AccessToken.getCurrentAccessToken(), "/me/taggable_friends", new GraphRequest.Callback() {
-            @Override
-            public void onCompleted(GraphResponse response) {
-                JSONObject json = response.getJSONObject();
-                try {
-                    JSONArray jsonArray = json.getJSONArray("data");
-                    for (int i=0;i<jsonArray.length();i++) {
-                        fbContact contact_ele = new fbContact();
-                        contact_ele.name = jsonArray.getJSONObject(i).getString("name");
-                        contact_ele.img_src = jsonArray.getJSONObject(i).getJSONObject("picture").getJSONObject("data").getString("url");
-                        contact_list.add(contact_ele);
-                        //Log.d("AAA", contact_ele.name);
-                    }
-                    GraphRequest nextRequest = response.getRequestForPagedResults(GraphResponse.PagingDirection.NEXT);
-                    if (nextRequest != null) {
-                        nextRequest.setCallback(this);
-                        nextRequest.executeAsync();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        graphRequest2.executeAsync();
-
-        return contact_list;
-    }
-
-    private class fbContact {
-        String img_src = "Default";
-        String name = "Default";
     }
 }

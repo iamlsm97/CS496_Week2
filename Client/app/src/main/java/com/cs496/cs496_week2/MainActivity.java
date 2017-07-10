@@ -71,44 +71,44 @@ public class MainActivity extends AppCompatActivity
     public void Refresh() {
         if (FacebookUserInfo.isLoggedIn()) {
             GraphRequest graphRequest = GraphRequest.newMeRequest(AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
-                @Override
-                public void onCompleted(JSONObject object, GraphResponse response) {
-                    try {
-                        Log.d("LOGLOG", object.toString());
-                        img = object.getJSONObject("picture").getJSONObject("data").getString("url");
-                        Log.d("img url", img);
-                        name = object.getString("name");
-                        email = object.getString("email");
+            @Override
+            public void onCompleted(JSONObject object, GraphResponse response) {
+                try {
+                    Log.d("LOGLOG", object.toString());
+                    img = object.getJSONObject("picture").getJSONObject("data").getString("url");
+                    Log.d("img url", img);
+                    name = object.getString("name");
+                    email = object.getString("email");
 
-                        TextView textView = (TextView) findViewById(R.id.header_text);
-                        TextView textView2 = (TextView) findViewById(R.id.header_text2);
+                    TextView textView = (TextView) findViewById(R.id.header_text);
+                    TextView textView2 = (TextView) findViewById(R.id.header_text2);
 
-                        ImageView imageView = (ImageView) findViewById(R.id.header_image);
-                        if (FacebookUserInfo.isLoggedIn()) {
-                            Thread thread = new Thread() {
-                                public void run() {
-                                    try {
-                                        bitmap = BitmapFactory.decodeStream(new URL(img).openStream());
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
+                    ImageView imageView = (ImageView) findViewById(R.id.header_image);
+                    if (FacebookUserInfo.isLoggedIn()) {
+                        Thread thread = new Thread() {
+                            public void run() {
+                                try {
+                                    bitmap = BitmapFactory.decodeStream(new URL(img).openStream());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
                                 }
-                            };
-                            thread.start();
-                            textView.setText(name);
-                            textView2.setText(email);
-                            thread.join();
-                            imageView.setImageBitmap(bitmap);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                            }
+                        };
+                        thread.start();
+                        textView.setText(name);
+                        textView2.setText(email);
+                        thread.join();
+                        imageView.setImageBitmap(bitmap);
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            });
-            Bundle parameters = new Bundle();
-            parameters.putString("fields", "id,name,email,picture.type(large)");
-            graphRequest.setParameters(parameters);
-            graphRequest.executeAsync();
+            }
+        });
+        Bundle parameters = new Bundle();
+        parameters.putString("fields", "id,name,email,picture.type(large)");
+        graphRequest.setParameters(parameters);
+        graphRequest.executeAsync();
         } else {
             TextView textView = (TextView) findViewById(R.id.header_text);
             TextView textView2 = (TextView) findViewById(R.id.header_text2);
@@ -133,6 +133,7 @@ public class MainActivity extends AppCompatActivity
                     Log.e("onSuccess", "onSuccess");
                     itemMenu.findItem(R.id.nav_login).setVisible(!FacebookUserInfo.isLoggedIn());
                     itemMenu.findItem(R.id.nav_logout).setVisible(FacebookUserInfo.isLoggedIn());
+                    FacebookUserInfo.Login();
                     Refresh();
                 }
 
@@ -150,6 +151,7 @@ public class MainActivity extends AppCompatActivity
             LoginManager.getInstance().logOut();
             itemMenu.findItem(R.id.nav_login).setVisible(!FacebookUserInfo.isLoggedIn());
             itemMenu.findItem(R.id.nav_logout).setVisible(FacebookUserInfo.isLoggedIn());
+            FacebookUserInfo.Logout();
             Refresh();
         }  else if (id == R.id.nav_share) {
 
@@ -167,7 +169,6 @@ public class MainActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == CallbackManagerImpl.RequestCodeOffset.Login.toRequestCode()) {
-            //login
             callbackManager.onActivityResult(requestCode, resultCode, data);
         }
 
@@ -217,21 +218,21 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView;
         navigationView = (NavigationView) findViewById(R.id.nav_view);
+        if (FacebookUserInfo.isLoggedIn()) FacebookUserInfo.Login();
         itemMenu = navigationView.getMenu();
         itemMenu.findItem(R.id.nav_login).setVisible(!FacebookUserInfo.isLoggedIn());
         itemMenu.findItem(R.id.nav_logout).setVisible(FacebookUserInfo.isLoggedIn());
-        //Refresh();
 
         navigationView.setNavigationItemSelectedListener(this);
-      /*
-      FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-      fab.setOnClickListener(new View.OnClickListener() {
+        /*
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
           @Override
           public void onClick(View view) {
               Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                       .setAction("Action", null).show();
           }
-      });*/
+        });*/
 
     }
 
@@ -240,6 +241,7 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.activity_main_drawer, menu);
+        Refresh();
         return true;
     }
 
