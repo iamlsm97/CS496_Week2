@@ -263,7 +263,7 @@ public class Tab3Gallery extends Fragment {
             Glide.with(getActivity())
                     .load(galleryId.get(position))
                     .into(imageView);
-            imageView.setOnClickListener(new Tab2Gallery_ImageClickListener(mContext, galleryId.get(position)));
+            imageView.setOnClickListener(new Tab3Gallery_ImageClickListener(mContext, galleryId.get(position)));
             return imageView;
         }
     }

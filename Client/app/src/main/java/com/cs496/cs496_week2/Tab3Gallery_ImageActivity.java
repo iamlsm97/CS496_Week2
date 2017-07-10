@@ -16,13 +16,13 @@ import uk.co.senab.photoview.PhotoViewAttacher;
  * Created by rongrong on 2017-07-10.
  */
 
-public class Tab2Gallery_ImageActivity extends Activity {
+public class Tab3Gallery_ImageActivity extends Activity {
     ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.tab2_gallery_image_slide);
+        setContentView(R.layout.tab3_gallery_image_slide);
         ImageView imageView = (ImageView)findViewById(R.id.imageView);
         PhotoViewAttacher mAttacher;
         setImage(imageView);
