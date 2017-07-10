@@ -33,10 +33,19 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Locale;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 /**
  * Created by rongrong on 2017-07-06.
@@ -52,8 +61,7 @@ public class Tab1Contacts extends Fragment {
     String phone_num;
     View view;
 
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         try {
             PackageInfo info = getActivity().getPackageManager().getPackageInfo(
                     "com.cs496.cs496_week2", //앱의 패키지 명
@@ -66,71 +74,44 @@ public class Tab1Contacts extends Fragment {
         } catch (PackageManager.NameNotFoundException e) {
         } catch (NoSuchAlgorithmException e) {
         }
+
         view = inflater.inflate(R.layout.tab1_contacts, null);
-        int permissionCheck = ContextCompat.checkSelfPermission(this.getActivity(), android.Manifest.permission.READ_CONTACTS);
 
-        if (permissionCheck == PackageManager.PERMISSION_DENIED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), android.Manifest.permission.READ_CONTACTS)) {
-                AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
-                dialog.setTitle("Permission Check")
-                        .setMessage("[설정] > [개인정보 보호 및 안전] > [앱 권한] 에서 권한을 요청하여야 합니다")
-                        .setPositiveButton("수락", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                requestPermissions(
-                                        new String[]{android.Manifest.permission.READ_CONTACTS},
-                                        MY_PERMISSIONS_REQUEST_READ_CONTACTS
-                                );
-                            }
-                        })
-                        .setNegativeButton("거절", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Toast.makeText(getActivity(), "요청이 거부되었습니다", Toast.LENGTH_SHORT).show();
-                            }
-                        }).create().show();
-            } else {
-                requestPermissions(
-                        new String[]{android.Manifest.permission.READ_CONTACTS},
-                        MY_PERMISSIONS_REQUEST_READ_CONTACTS
-                );
+        ContactArrList = getContactList();
+        final CustomAdapter adapter = new CustomAdapter(this.getActivity(), R.layout.tab1_contacts_layout, ContactArrList);
+
+        final EditText searchText = (EditText) view.findViewById(R.id.text_search);
+        searchText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
             }
-        } else {
-            ContactArrList = getContactList();
-            final CustomAdapter adapter = new CustomAdapter(this.getActivity(), R.layout.tab1_contacts_layout, ContactArrList);
 
-            final EditText searchText = (EditText) view.findViewById(R.id.text_search);
-            searchText.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
 
-                }
+            }
 
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
+            @Override
+            public void afterTextChanged(Editable s) {
+                String search_text = s.toString();
+                adapter.filter(search_text);
+            }
+        });
 
-                }
+        Button direct = (Button) view.findViewById(R.id.direct);
+        direct.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String tel = "tel:" + displayitems.get(0).phone_num;
+                startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
+            }
+        });
 
-                @Override
-                public void afterTextChanged(Editable s) {
-                    String search_text = s.toString();
-                    adapter.filter(search_text);
-                }
-            });
+        ListView listview = (ListView) view.findViewById(R.id.list_view);
+        if (listview != null)
+            listview.setAdapter(adapter);
 
-            Button direct = (Button) view.findViewById(R.id.direct);
-            direct.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    String tel = "tel:" + displayitems.get(0).phone_num;
-                    startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
-                }
-            });
-
-            ListView listview = (ListView) view.findViewById(R.id.list_view);
-            if (listview != null)
-                listview.setAdapter(adapter);
-        }
         return view;
     }
 
@@ -140,8 +121,7 @@ public class Tab1Contacts extends Fragment {
             displayitems.clear();
             if (searchText.length() == 0) {
                 displayitems.addAll(items);
-            }
-            else {
+            } else {
                 for (Contact item : items) {
                     if (item.name.contains(searchText)) {
                         displayitems.add(item);
@@ -180,89 +160,35 @@ public class Tab1Contacts extends Fragment {
                 v = vi.inflate(R.layout.tab1_contacts_layout, null);
             }
 
-            ImageView imageView = (ImageView)v.findViewById(R.id.olaf);
+            ImageView imageView = (ImageView) v.findViewById(R.id.olaf);
             imageView.setImageResource(R.drawable.olaf);
             imageView.setBackground(new ShapeDrawable(new OvalShape()));
             imageView.setClipToOutline(true);
 
-            TextView textView1 = (TextView)v.findViewById(R.id.textView1);
+            TextView textView1 = (TextView) v.findViewById(R.id.textView1);
             textView1.setText(displayitems.get(position).name);
-            TextView textView2 = (TextView)v.findViewById(R.id.textView2);
+            TextView textView2 = (TextView) v.findViewById(R.id.textView2);
             textView2.setText(displayitems.get(position).phone_num);
-            ImageButton button1 = (ImageButton)v.findViewById(R.id.button1);
+            ImageButton button1 = (ImageButton) v.findViewById(R.id.button1);
             phone_num = displayitems.get(position).phone_num;
 
             button1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    int permissionCheck = ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.CALL_PHONE);
-                    if (permissionCheck == PackageManager.PERMISSION_DENIED) {
-                        if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), android.Manifest.permission.CALL_PHONE)) {
-                            AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
-                            dialog.setTitle("Permission Check")
-                                    .setMessage("[설정] > [개인정보 보호 및 안전] > [앱 권한] 에서 권한을 요청하여야 합니다")
-                                    .setPositiveButton("수락", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            requestPermissions(
-                                                    new String[]{android.Manifest.permission.CALL_PHONE},
-                                                    MY_PERMISSIONS_REQUEST_CALL_PHONE
-                                            );
-                                        }
-                                    })
-                                    .setNegativeButton("거절", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            Toast.makeText(getActivity(), "요청이 거부되었습니다", Toast.LENGTH_SHORT).show();
-                                        }
-                                    }).create().show();
-                        } else {
-                            requestPermissions(
-                                    new String[]{android.Manifest.permission.CALL_PHONE},
-                                    MY_PERMISSIONS_REQUEST_CALL_PHONE
-                            );
-                        }
-                    } else {
-                        String tel = "tel:" + displayitems.get(position).phone_num;
-                        startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
-                    }
+
+                    String tel = "tel:" + displayitems.get(position).phone_num;
+                    startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
+
                 }
             });
             ImageButton button2 = (ImageButton) v.findViewById(R.id.button2);
             button2.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    int permissionCheck = ContextCompat.checkSelfPermission(getActivity(), android.Manifest.permission.CALL_PHONE);
-                    if (permissionCheck == PackageManager.PERMISSION_DENIED) {
-                        if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), android.Manifest.permission.CALL_PHONE)) {
-                            AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
-                            dialog.setTitle("Permission Check")
-                                    .setMessage("[설정] > [개인정보 보호 및 안전] > [앱 권한] 에서 권한을 요청하여야 합니다")
-                                    .setPositiveButton("수락", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            requestPermissions(
-                                                    new String[]{android.Manifest.permission.CALL_PHONE},
-                                                    MY_PERMISSIONS_REQUEST_DIAL_PHONE
-                                            );
-                                        }
-                                    })
-                                    .setNegativeButton("거절", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            Toast.makeText(getActivity(), "요청이 거부되었습니다", Toast.LENGTH_SHORT).show();
-                                        }
-                                    }).create().show();
-                        } else {
-                            requestPermissions(
-                                    new String[]{android.Manifest.permission.CALL_PHONE},
-                                    MY_PERMISSIONS_REQUEST_DIAL_PHONE
-                            );
-                        }
-                    } else {
-                        String tel = "tel:" + displayitems.get(position).phone_num;
-                        startActivity(new Intent("android.intent.action.DIAL", Uri.parse(tel)));
-                    }
+
+                    String tel = "tel:" + displayitems.get(position).phone_num;
+                    startActivity(new Intent("android.intent.action.DIAL", Uri.parse(tel)));
+
                 }
             });
             return v;
@@ -299,6 +225,43 @@ public class Tab1Contacts extends Fragment {
         }
         contactCursor.close();
 
+//        String dbContact = null;
+
+        JSONArray DBContact = null;
+//        DBContact = getDBContact();
+        CustomThread thread = new CustomThread();
+        thread.start();
+
+        try {
+            thread.join();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        DBContact = thread.getResult();
+        Log.e("dbdbdb", DBContact.toString());
+        for (int i=0; i<DBContact.length(); i++){
+            JSONObject single = null;
+            try {
+                single = DBContact.getJSONObject(i);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Contact contact_ele = new Contact();
+            try {
+                contact_ele.phone_num = single.getString("number");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            try {
+                contact_ele.name = single.getString("name");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            contact_list.add(contact_ele);
+        }
+
+
         return contact_list;
     }
 
@@ -307,6 +270,79 @@ public class Tab1Contacts extends Fragment {
         String phone_num = "Default";
         String name = "Default";
     }
+
+    public class GetContact {
+        OkHttpClient client = new OkHttpClient();
+
+        String get(String url) throws IOException {
+            Request request = new Request.Builder()
+                    .url(url)
+                    .build();
+
+            Response response = client.newCall(request).execute();
+            return response.body().string();
+
+        }
+    }
+
+    public class CustomThread extends Thread {
+        JSONArray dbContact = null;
+        final GetContact example = new GetContact();
+
+        public CustomThread() {
+            dbContact = null;
+        }
+
+        @Override
+        public void run() {
+            String response = null;
+            try {
+                response = example.get("http://13.124.143.15:8080/api/rongrong@sparcs.org/contact");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                dbContact = new JSONArray(response);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Log.e("response in Thread", dbContact.toString());
+        }
+
+        public JSONArray getResult() {
+            Log.e("Return in Thread", dbContact.toString());
+            return dbContact;
+        }
+
+
+    }
+
+//    public JSONArray getDBContact(){
+//        final GetContact example = new GetContact();
+//
+//
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                String response = null;
+//                try {
+//                    response = example.get("http://13.124.143.15:8080/api/rongrong@sparcs.org/contact");
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//                JSONArray dbContact = null;
+//                try {
+//                    dbContact = new JSONArray(response);
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//                Log.e("response", String.valueOf(dbContact.length()));
+//
+//            }
+//        }).start();
+//
+//        return dbContact
+//    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,
@@ -322,7 +358,7 @@ public class Tab1Contacts extends Fragment {
                     if (listview != null)
                         listview.setAdapter(adapter);
                 } else {
-                    Toast.makeText(getActivity(),"요청이 거부되었습니다",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "요청이 거부되었습니다", Toast.LENGTH_SHORT).show();
                 }
                 return;
 
@@ -332,7 +368,7 @@ public class Tab1Contacts extends Fragment {
                     String tel = "tel:" + phone_num;
                     startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
                 } else {
-                    Toast.makeText(getActivity(),"요청이 거부되었습니다",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "요청이 거부되었습니다", Toast.LENGTH_SHORT).show();
                 }
                 return;
 
@@ -342,7 +378,7 @@ public class Tab1Contacts extends Fragment {
                     String tel = "tel:" + phone_num;
                     startActivity(new Intent("android.intent.action.DIAL", Uri.parse(tel)));
                 } else {
-                    Toast.makeText(getActivity(),"요청이 거부되었습니다",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "요청이 거부되었습니다", Toast.LENGTH_SHORT).show();
                 }
                 return;
         }

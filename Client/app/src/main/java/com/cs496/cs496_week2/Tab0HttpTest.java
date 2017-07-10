@@ -125,6 +125,22 @@ public class Tab0HttpTest extends Fragment {
                         }
                     }).start();
 
+                } else if (method.equals("IMG")) {
+                    final ImagePost example = new ImagePost();
+
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String response = null;
+                            try {
+                                response = example.post("http://13.124.143.15:8080" + urltext, proimg);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            Runnable r = new textThread(response);
+                            getActivity().runOnUiThread(r);
+                        }
+                    }).start();
                 }
 
             }
@@ -204,6 +220,25 @@ public class Tab0HttpTest extends Fragment {
             Response response = client.newCall(request).execute();
             return response.body().string();
 
+        }
+    }
+
+    public class ImagePost {
+        OkHttpClient client = new OkHttpClient();
+
+        String post(String url, File file) throws IOException {
+            RequestBody formBody = null;
+            String filenameArray[] = file.getName().split("\\.");
+            String ext = filenameArray[filenameArray.length - 1];
+            formBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("image", file.getName(), RequestBody.create(MediaType.parse("image/" + ext), file))
+                    .build();
+
+            Request request = new Request.Builder().url(url).put(formBody).build();
+            Response response = client.newCall(request).execute();
+            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            return response.body().string();
         }
     }
 
