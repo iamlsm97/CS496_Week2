@@ -8,12 +8,16 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.MediaStore;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -37,6 +41,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -46,6 +51,8 @@ import java.util.Locale;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
+import static android.app.Activity.RESULT_OK;
 
 /**
  * Created by rongrong on 2017-07-06.
@@ -60,6 +67,10 @@ public class Tab1Contacts extends Fragment {
     ArrayList<Contact> displayitems = new ArrayList<>();
     String phone_num;
     View view;
+
+    View dialogView = null;
+    ImageView showimg = null;
+    File add_profile_image = null;
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         try {
@@ -76,6 +87,8 @@ public class Tab1Contacts extends Fragment {
         }
 
         view = inflater.inflate(R.layout.tab1_contacts, null);
+
+        FloatingActionButton btnAdd = view.findViewById(R.id.fab_add);
 
         ContactArrList = getContactList();
         final CustomAdapter adapter = new CustomAdapter(this.getActivity(), R.layout.tab1_contacts_layout, ContactArrList);
@@ -111,6 +124,8 @@ public class Tab1Contacts extends Fragment {
         ListView listview = (ListView) view.findViewById(R.id.list_view);
         if (listview != null)
             listview.setAdapter(adapter);
+
+        btnAdd.setOnClickListener(btnAddListener);
 
         return view;
     }
@@ -240,7 +255,7 @@ public class Tab1Contacts extends Fragment {
 
         DBContact = thread.getResult();
         Log.e("dbdbdb", DBContact.toString());
-        for (int i=0; i<DBContact.length(); i++){
+        for (int i = 0; i < DBContact.length(); i++) {
             JSONObject single = null;
             try {
                 single = DBContact.getJSONObject(i);
@@ -383,4 +398,78 @@ public class Tab1Contacts extends Fragment {
                 return;
         }
     }
+
+    View.OnClickListener btnAddListener = new View.OnClickListener() {
+
+        File profile = null;
+
+        @Override
+        public void onClick(View view) {
+            dialogView = (View) View.inflate(getContext(), R.layout.tab1_contacts_dialog, null);
+            showimg = (ImageView) dialogView.findViewById(R.id.showimg);
+
+            final EditText addname = (EditText) dialogView.findViewById(R.id.addname);
+            final EditText addnum = (EditText) dialogView.findViewById(R.id.addnum);
+            Button selimg = (Button) dialogView.findViewById(R.id.selimg);
+            Button unselimg = (Button) dialogView.findViewById(R.id.unselimg);
+
+            final String name = addname.getText().toString();
+            final String num = addnum.getText().toString();
+
+            selimg.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(Intent.ACTION_PICK);
+                    intent.setType("image/*");
+                    startActivityForResult(intent, 486);
+                }
+            });
+            unselimg.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    add_profile_image = null;
+                    showimg.setImageBitmap(null);
+                }
+            });
+
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getContext());
+            alertDialogBuilder.setTitle("Add New Contact");
+            alertDialogBuilder.setView(dialogView);
+            alertDialogBuilder.setPositiveButton("Confirm", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+
+                    Toast.makeText(getContext(), name + num, Toast.LENGTH_SHORT).show();
+                }
+            });
+            alertDialogBuilder.setNegativeButton("Cancel", null);
+
+            AlertDialog alertDialog = alertDialogBuilder.create();
+            alertDialog.show();
+
+        }
+    };
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 486 && resultCode == RESULT_OK && data != null) {
+
+            Uri uri = data.getData();
+
+            String[] filePath = {MediaStore.Images.Media.DATA};
+            Cursor cursor = getContext().getContentResolver().query(uri, filePath, null, null, null);
+            cursor.moveToFirst();
+            String imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]));
+            cursor.close();
+
+            add_profile_image = new File(imagePath);
+
+            Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+            showimg.setImageBitmap(bitmap);
+            Toast.makeText(getContext(), "Image Selected", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 }
