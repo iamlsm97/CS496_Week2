@@ -36,6 +36,7 @@ public class HttpCall extends Activity{
     private static GetExample getexample = new GetExample();
     private static PostExample postexample = new PostExample();
     private static PutExample putexample = new PutExample();
+    private static fbPutExample fbputexample = new fbPutExample();
 
     private static File proimg = null;
     private static String method;
@@ -44,6 +45,7 @@ public class HttpCall extends Activity{
     private static String name;
     private static String number;
     private static String response;
+    private static String id;
 
     public static void setMethodtext(String s) {
         method = s;
@@ -59,6 +61,10 @@ public class HttpCall extends Activity{
 
     public static void setNametext(String s) {
         name = s;
+    }
+
+    public static void setIdtext(String s) {
+        id = s;
     }
 
     public static void setNumbertext(String s) {
@@ -129,6 +135,38 @@ public class HttpCall extends Activity{
         }
     }
 
+    public static class fbPutExample {
+        //        public final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+        OkHttpClient client = new OkHttpClient();
+
+        String fbput(String url, File file, String name, String id) throws IOException {
+            RequestBody formBody;
+            if (file != null) {
+                Log.d("File not null", "afads");
+                String filenameArray[] = file.getName().split("\\.");
+                String ext = filenameArray[filenameArray.length - 1];
+                formBody = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("name", name)
+                        .addFormDataPart("id", id)
+                        .addFormDataPart("profile_image", file.getName(), RequestBody.create(MediaType.parse("image/" + ext), file))
+                        .build();
+            } else {
+                Log.d("File null", "afads");
+                formBody = new MultipartBody.Builder()
+                        .setType(MultipartBody.FORM)
+                        .addFormDataPart("name", name)
+                        .addFormDataPart("id", id)
+                        .build();
+            }
+
+            Request request = new Request.Builder().url(url).put(formBody).build();
+            Response response = client.newCall(request).execute();
+            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            return response.body().string();
+        }
+    }
+
     public static String getResponse() {
         Log.d("METHOD", method);
         Log.d("URL", urltext);
@@ -171,6 +209,19 @@ public class HttpCall extends Activity{
             }
             return mThread.getResponse();
 
+        } else if (method.equals("fbPUT")) {
+            fbputexample = new fbPutExample();
+            response = null;
+
+            fbputThread mThread = new fbputThread();
+            mThread.start();
+            try {
+                mThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return mThread.getResponse();
+
         }
         return null;
     }
@@ -182,6 +233,23 @@ public class HttpCall extends Activity{
         public void run() {
             try {
                 response = putexample.put("http://13.124.143.15:8080" + urltext, proimg, name, number);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public String getResponse() {
+            return response;
+        }
+    }
+
+    public static class fbputThread extends Thread {
+        static String response;
+
+        @Override
+        public void run() {
+            try {
+                response = fbputexample.fbput("http://13.124.143.15:8080" + urltext, proimg, name, id);
             } catch (IOException e) {
                 e.printStackTrace();
             }

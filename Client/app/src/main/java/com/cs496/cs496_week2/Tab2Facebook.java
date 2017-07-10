@@ -28,7 +28,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -128,13 +132,22 @@ public class Tab2Facebook extends Fragment {
             }
 
             ImageView imageView = (ImageView)v.findViewById(R.id.profile_img);
+
             Thread thread = new Thread() {
                 public void run() {
+                    InputStream in = null;
                     try {
-                        bitmap = BitmapFactory.decodeStream(new URL(displayitems.get(position).img_src).openStream());
+                        URL url = new URL(displayitems.get(position).img_src);
+                        URLConnection urlConn = url.openConnection();
+                        HttpURLConnection httpConn = (HttpURLConnection) urlConn;
+                        httpConn.connect();
+                        in = httpConn.getInputStream();
+                    } catch (MalformedURLException e) {
+                        e.printStackTrace();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                    bitmap = BitmapFactory.decodeStream(in);
                 }
             };
             thread.start();
