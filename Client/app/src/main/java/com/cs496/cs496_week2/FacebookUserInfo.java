@@ -18,18 +18,19 @@ import java.util.ArrayList;
  */
 
 public class FacebookUserInfo {
+    private static String userlist;
     private static String name = new String();
     private static String email = new String();
     private static String id = new String();
     private static String img;
-    private static ArrayList<fbContact> contactArrayList = new ArrayList<>();
+    private static ArrayList<fbContact> fbcontactlist = new ArrayList<>();
     public static class fbContact {
         String img_src = "Default";
         String name = "Default";
     }
 
-    public static ArrayList<fbContact> getContactArrayList() {
-        return contactArrayList;
+    public static ArrayList<fbContact> getfbContactList() {
+        return fbcontactlist;
     }
 
     public static String getName() {
@@ -53,7 +54,11 @@ public class FacebookUserInfo {
         return accessToken != null;
     }
 
-    public static void Login() {
+    public static void Login() throws JSONException {
+        HttpCall.setMethodtext("GET");
+        HttpCall.setUrltext("/api/userlist");
+        userlist = HttpCall.getResponse();
+
         GraphRequest graphRequest = GraphRequest.newMeRequest(AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
             @Override
             public void onCompleted(JSONObject object, GraphResponse response) {
@@ -62,6 +67,15 @@ public class FacebookUserInfo {
                     img = object.getJSONObject("picture").getJSONObject("data").getString("url");
                     name = object.getString("name");
                     email = object.getString("email");
+                    if (!userlist.contains("\"email\":\""+email+"\"")) {
+                        HttpCall.setMethodtext("POST");
+                        HttpCall.setUrltext("/api/adduser");
+                        HttpCall.setBodytext("{\"email\":\""+email+"\"}");
+                        HttpCall.getResponse();
+                        Log.e("not in userlist", "email is "+ email);
+                    } else {
+                        Log.e("already joined", "!");
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -72,11 +86,28 @@ public class FacebookUserInfo {
         graphRequest.setParameters(parameters);
         graphRequest.executeAsync();
 
-        contactArrayList = getContactList();
+        JSONArray jsonlist = new JSONArray(userlist);
+        /*
+        try {
+            HttpCall.setMethodtext("GET");
+            HttpCall.setUrltext("/api/"+email+"/facebook");
+            JSONArray fbJSONArray = new JSONArray(HttpCall.getResponse());
+            for (int j=0;j<fbJSONArray.length();j++) {
+                fbContact new_ele = new fbContact();
+                new_ele.name = fbJSONArray.getJSONObject(j).getString("name");
+                new_ele.img_src = fbJSONArray.getJSONObject(j).getString("profile_image");
+                fbcontactlist.add(new_ele);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        */
+
+        fbcontactlist = getContactList();
     }
 
     public static void Logout() {
-        contactArrayList = new ArrayList<>();
+        fbcontactlist = new ArrayList<>();
     }
 
     public static ArrayList<fbContact> getContactList() {

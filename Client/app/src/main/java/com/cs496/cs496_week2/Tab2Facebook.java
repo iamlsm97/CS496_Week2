@@ -47,7 +47,9 @@ public class Tab2Facebook extends Fragment {
                              Bundle savedInstanceState) {
         if (FacebookUserInfo.isLoggedIn()) {
             view = inflater.inflate(R.layout.tab2_facebook, null);
-            ContactArrList = FacebookUserInfo.getContactArrayList();
+            ContactArrList = FacebookUserInfo.getfbContactList();
+
+            Log.d("AccessToken", AccessToken.getCurrentAccessToken().getToken());
 
             final CustomAdapter adapter = new CustomAdapter(this.getActivity(), R.layout.tab2_contacts_layout, ContactArrList);
 

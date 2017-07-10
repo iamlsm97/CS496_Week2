@@ -38,7 +38,7 @@ public class Tab0HttpTest extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.tab0_httptest, container, false);
-        
+
         /*
         if (FacebookUserInfo.isLoggedIn()) {
             try {

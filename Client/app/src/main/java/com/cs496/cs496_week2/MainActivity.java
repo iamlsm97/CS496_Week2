@@ -41,6 +41,7 @@ import com.facebook.internal.CallbackManagerImpl;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -126,14 +127,18 @@ public class MainActivity extends AppCompatActivity
         callbackManager = CallbackManager.Factory.create();
 
         if (id == R.id.nav_login) {
-            LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile","user_friends"));
+            LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile","user_friends","email"));
             LoginManager.getInstance().registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
                 @Override
                 public void onSuccess(final LoginResult loginResult) {
                     Log.e("onSuccess", "onSuccess");
                     itemMenu.findItem(R.id.nav_login).setVisible(!FacebookUserInfo.isLoggedIn());
                     itemMenu.findItem(R.id.nav_logout).setVisible(FacebookUserInfo.isLoggedIn());
-                    FacebookUserInfo.Login();
+                    try {
+                        FacebookUserInfo.Login();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                     Refresh();
                 }
 
@@ -218,7 +223,11 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView;
         navigationView = (NavigationView) findViewById(R.id.nav_view);
-        if (FacebookUserInfo.isLoggedIn()) FacebookUserInfo.Login();
+        if (FacebookUserInfo.isLoggedIn()) try {
+            FacebookUserInfo.Login();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         itemMenu = navigationView.getMenu();
         itemMenu.findItem(R.id.nav_login).setVisible(!FacebookUserInfo.isLoggedIn());
         itemMenu.findItem(R.id.nav_logout).setVisible(FacebookUserInfo.isLoggedIn());
