@@ -18,6 +18,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -118,6 +119,8 @@ public class Tab4CafeMap extends Fragment implements OnMapReadyCallback {
     public void onMapReady(final GoogleMap map) {
         LatLng cafe = new LatLng(lat, lng);
 
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(cafe, 15);
+
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(cafe);
         markerOptions.title(name);
@@ -125,8 +128,10 @@ public class Tab4CafeMap extends Fragment implements OnMapReadyCallback {
         map.setMyLocationEnabled(true);
         map.addMarker(markerOptions);
 
-        map.moveCamera(CameraUpdateFactory.newLatLng(cafe));
-        map.animateCamera(CameraUpdateFactory.zoomTo(17));
+        map.animateCamera(cameraUpdate);
+
+//        map.moveCamera(CameraUpdateFactory.newLatLng(cafe));
+//        map.animateCamera(CameraUpdateFactory.zoomTo(12));
     }
 
     @Override
