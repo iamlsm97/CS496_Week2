@@ -43,6 +43,11 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -65,10 +70,11 @@ public class Tab1Contacts extends Fragment {
     private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 527;
     private static final int MY_PERMISSIONS_REQUEST_CALL_PHONE = 528;
     private static final int MY_PERMISSIONS_REQUEST_DIAL_PHONE = 529;
-    ArrayList<Contact> ContactArrList;
-    ArrayList<Contact> items;
-    ArrayList<Contact> displayitems = new ArrayList<>();
+    ArrayList<FacebookUserInfo.Contact> ContactArrList;
+    ArrayList<FacebookUserInfo.Contact> items;
+    ArrayList<FacebookUserInfo.Contact> displayitems = new ArrayList<>();
     String phone_num;
+    Bitmap bitmap;
     View view;
 
     View dialogView = null;
@@ -78,76 +84,67 @@ public class Tab1Contacts extends Fragment {
     String add_new_num = null;
 
     CustomAdapter adapter;
-    ArrayList<Contact> contact_list = new ArrayList<>();
+    ArrayList<FacebookUserInfo.Contact> contact_list = new ArrayList<>();
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        try {
-            PackageInfo info = getActivity().getPackageManager().getPackageInfo(
-                    "com.cs496.cs496_week2", //앱의 패키지 명
-                    PackageManager.GET_SIGNATURES);
-            for (Signature signature : info.signatures) {
-                MessageDigest md = MessageDigest.getInstance("SHA");
-                md.update(signature.toByteArray());
-                Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-        } catch (NoSuchAlgorithmException e) {
+        if (!FacebookUserInfo.isLoggedIn()) {
+            view = inflater.inflate(R.layout._logout, null);
+        }
+        else {
+            view = inflater.inflate(R.layout.tab1_contacts, null);
+            ContactArrList = FacebookUserInfo.getContactList();
+
+            FloatingActionButton btnAdd = view.findViewById(R.id.fab_add);
+            adapter = new CustomAdapter(this.getActivity(), R.layout.tab1_contacts_layout, ContactArrList);
+
+            final EditText searchText = (EditText) view.findViewById(R.id.text_search);
+            searchText.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    String search_text = s.toString();
+                    adapter.filter(search_text);
+                }
+            });
+
+            Button direct = (Button) view.findViewById(R.id.direct);
+            direct.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String tel = "tel:" + displayitems.get(0).number;
+                    startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
+                }
+            });
+
+            ListView listview = (ListView) view.findViewById(R.id.list_view);
+            if (listview != null)
+                listview.setAdapter(adapter);
+
+            btnAdd.setOnClickListener(btnAddListener);
         }
 
-        contact_list.clear();
-
-        view = inflater.inflate(R.layout.tab1_contacts, null);
-
-        FloatingActionButton btnAdd = view.findViewById(R.id.fab_add);
-
-        ContactArrList = getContactList();
-        adapter = new CustomAdapter(this.getActivity(), R.layout.tab1_contacts_layout, ContactArrList);
-
-        final EditText searchText = (EditText) view.findViewById(R.id.text_search);
-        searchText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                String search_text = s.toString();
-                adapter.filter(search_text);
-            }
-        });
-
-        Button direct = (Button) view.findViewById(R.id.direct);
-        direct.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String tel = "tel:" + displayitems.get(0).phone_num;
-                startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
-            }
-        });
-
-        ListView listview = (ListView) view.findViewById(R.id.list_view);
-        if (listview != null)
-            listview.setAdapter(adapter);
-
-        btnAdd.setOnClickListener(btnAddListener);
+        adapter.notifyDataSetChanged();
 
         return view;
     }
 
-    private class CustomAdapter extends ArrayAdapter<Contact> {
+    private class CustomAdapter extends ArrayAdapter<FacebookUserInfo.Contact> {
         public void filter(String searchText) {
             searchText = searchText.toLowerCase(Locale.getDefault());
             displayitems.clear();
             if (searchText.length() == 0) {
                 displayitems.addAll(items);
             } else {
-                for (Contact item : items) {
+                for (FacebookUserInfo.Contact item : items) {
                     if (item.name.contains(searchText)) {
                         displayitems.add(item);
                     }
@@ -156,7 +153,7 @@ public class Tab1Contacts extends Fragment {
             notifyDataSetChanged();
         }
 
-        public CustomAdapter(Context context, int textViewResourceId, ArrayList<Contact> objects) {
+        public CustomAdapter(Context context, int textViewResourceId, ArrayList<FacebookUserInfo.Contact> objects) {
             super(context, textViewResourceId, objects);
             displayitems = objects;
             items = new ArrayList<>();
@@ -169,7 +166,7 @@ public class Tab1Contacts extends Fragment {
         }
 
         @Override
-        public Contact getItem(int position) {
+        public FacebookUserInfo.Contact getItem(int position) {
             return displayitems.get(position);
         }
 
@@ -186,22 +183,49 @@ public class Tab1Contacts extends Fragment {
             }
 
             ImageView imageView = (ImageView) v.findViewById(R.id.olaf);
-            imageView.setImageResource(R.drawable.olaf);
+            if (displayitems.get(position).img_src == null)
+                imageView.setImageResource(R.drawable.olaf);
+            else {
+                Thread thread = new Thread() {
+                    public void run() {
+                        InputStream in = null;
+                        try {
+                            URL url = new URL(displayitems.get(position).img_src);
+                            URLConnection urlConn = url.openConnection();
+                            HttpURLConnection httpConn = (HttpURLConnection) urlConn;
+                            httpConn.connect();
+                            in = httpConn.getInputStream();
+                        } catch (MalformedURLException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        bitmap = BitmapFactory.decodeStream(in);
+                    }
+                };
+                thread.start();
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                imageView.setImageBitmap(bitmap);
+            }
             imageView.setBackground(new ShapeDrawable(new OvalShape()));
             imageView.setClipToOutline(true);
 
             TextView textView1 = (TextView) v.findViewById(R.id.textView1);
             textView1.setText(displayitems.get(position).name);
             TextView textView2 = (TextView) v.findViewById(R.id.textView2);
-            textView2.setText(displayitems.get(position).phone_num);
+            textView2.setText(displayitems.get(position).number);
             ImageButton button1 = (ImageButton) v.findViewById(R.id.button1);
-            phone_num = displayitems.get(position).phone_num;
+            phone_num = displayitems.get(position).number;
 
             button1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 
-                    String tel = "tel:" + displayitems.get(position).phone_num;
+                    String tel = "tel:" + displayitems.get(position).number;
                     startActivity(new Intent("android.intent.action.CALL", Uri.parse(tel)));
 
                 }
@@ -211,88 +235,13 @@ public class Tab1Contacts extends Fragment {
                 @Override
                 public void onClick(View v) {
 
-                    String tel = "tel:" + displayitems.get(position).phone_num;
+                    String tel = "tel:" + displayitems.get(position).number;
                     startActivity(new Intent("android.intent.action.DIAL", Uri.parse(tel)));
 
                 }
             });
             return v;
         }
-    }
-
-    private ArrayList<Contact> getContactList() {
-        Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
-        String[] projection = {
-                ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
-                ContactsContract.CommonDataKinds.Phone.NUMBER,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
-        };
-        String sortOrder = ContactsContract.Contacts.DISPLAY_NAME_PRIMARY + " asc";
-        String condition = ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1";
-        String[] selectionArgs = null;
-
-        Cursor contactCursor = getActivity().getContentResolver().query(
-                uri,
-                projection,
-                condition,
-                selectionArgs,
-                sortOrder
-        );
-
-
-
-        while (contactCursor.moveToNext()) {
-            Contact contact_ele = new Contact();
-            contact_ele.id = contactCursor.getLong(0);
-            contact_ele.phone_num = contactCursor.getString(1);
-            contact_ele.name = contactCursor.getString(2);
-            contact_list.add(contact_ele);
-        }
-        contactCursor.close();
-
-//        String dbContact = null;
-
-        JSONArray DBContact = null;
-//        DBContact = getDBContact();
-        CustomThread thread = new CustomThread();
-        thread.start();
-
-        try {
-            thread.join();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        DBContact = thread.getResult();
-        for (int i = 0; i < DBContact.length(); i++) {
-            JSONObject single = null;
-            try {
-                single = DBContact.getJSONObject(i);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            Contact contact_ele = new Contact();
-            try {
-                contact_ele.phone_num = single.getString("number");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            try {
-                contact_ele.name = single.getString("name");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            contact_list.add(contact_ele);
-        }
-
-
-        return contact_list;
-    }
-
-    private class Contact {
-        long id = 0;
-        String phone_num = "Default";
-        String name = "Default";
     }
 
     public class GetContact {
@@ -352,7 +301,7 @@ public class Tab1Contacts extends Fragment {
         public void run() {
             String response = null;
             try {
-                response = example.get("http://13.124.143.15:8080/api/rongrong@sparcs.org/contact");
+                response = example.get("http://13.124.143.15:8080/api/"+FacebookUserInfo.getEmail()+"/contact");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -366,8 +315,6 @@ public class Tab1Contacts extends Fragment {
         public JSONArray getResult() {
             return dbContact;
         }
-
-
     }
 
 //    public JSONArray getDBContact(){
@@ -404,7 +351,7 @@ public class Tab1Contacts extends Fragment {
             case MY_PERMISSIONS_REQUEST_READ_CONTACTS:
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    ContactArrList = getContactList();
+                    ContactArrList = FacebookUserInfo.getContactList();
                     adapter = new CustomAdapter(this.getActivity(), R.layout.tab1_contacts_layout, ContactArrList);
 
                     ListView listview = (ListView) view.findViewById(R.id.list_view);
@@ -490,8 +437,8 @@ public class Tab1Contacts extends Fragment {
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-                            Contact contact_ele = new Contact();
-                            contact_ele.phone_num = add_new_num;
+                            FacebookUserInfo.Contact contact_ele = new FacebookUserInfo.Contact();
+                            contact_ele.number = add_new_num;
                             contact_ele.name = add_new_name;
                             contact_list.add(contact_ele);
                             getActivity().runOnUiThread(new Runnable() {

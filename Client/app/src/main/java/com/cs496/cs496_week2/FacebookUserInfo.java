@@ -1,18 +1,32 @@
 package com.cs496.cs496_week2;
 
+import android.app.Activity;
+import android.app.Fragment;
+import android.content.ContentProvider;
+import android.content.ContentUris;
+import android.content.Context;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.util.Log;
+import android.widget.ArrayAdapter;
 
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 
+import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -32,13 +46,23 @@ public class FacebookUserInfo {
     private static String id = new String();
     private static String img;
     private static ArrayList<fbContact> fbcontactlist = new ArrayList<>();
+    private static ArrayList<Contact> contactlist = new ArrayList<>();
     public static class fbContact {
         String img_src = "Default";
+        String name = "Default";
+    }
+    public static class Contact {
+        String img_src = "Default";
+        String number = "Default";
         String name = "Default";
     }
 
     public static ArrayList<fbContact> getfbContactList() {
         return fbcontactlist;
+    }
+
+    public static ArrayList<Contact> getContactList() {
+        return contactlist;
     }
 
     public static String getName() {
@@ -62,7 +86,7 @@ public class FacebookUserInfo {
         return accessToken != null;
     }
 
-    public static void Login() throws JSONException {
+    public static void Login(final Context context) throws JSONException {
         HttpCall.setMethodtext("GET");
         HttpCall.setUrltext("/api/userlist");
         userlist = HttpCall.getResponse();
@@ -83,6 +107,7 @@ public class FacebookUserInfo {
                         Log.e("not in userlist", "email is "+ email);
 
                         uploadFacebookContact(email);
+                        uploadContact(email, context);
                     } else {
                         Log.e("already joined", "!");
                         try {
@@ -94,6 +119,19 @@ public class FacebookUserInfo {
                                 new_ele.name = fbJSONArray.getJSONObject(j).getString("name");
                                 new_ele.img_src = "http://13.124.143.15:8080/"+fbJSONArray.getJSONObject(j).getString("profile_image");
                                 fbcontactlist.add(new_ele);
+                            }
+
+                            HttpCall.setMethodtext("GET");
+                            HttpCall.setUrltext("/api/"+email+"/contact");
+                            JSONArray contactJSONArray = new JSONArray(HttpCall.getResponse());
+                            for (int j=0;j<fbJSONArray.length();j++) {
+                                Contact new_ele = new Contact();
+                                new_ele.name = contactJSONArray.getJSONObject(j).getString("name");
+                                new_ele.number = contactJSONArray.getJSONObject(j).getString("number");
+                                if (contactJSONArray.getJSONObject(j).getString("profile_image") == null)
+                                    new_ele.img_src = null;
+                                else new_ele.img_src = contactJSONArray.getJSONObject(j).getString("profile_image");
+                                contactlist.add(new_ele);
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -114,6 +152,10 @@ public class FacebookUserInfo {
 
     public static void Logout() {
         fbcontactlist = new ArrayList<>();
+        contactlist = new ArrayList<>();
+        email = null;
+        name = null;
+        id = null;
     }
 
     static File f;
@@ -185,7 +227,48 @@ public class FacebookUserInfo {
         graphRequest2.executeAsync();
     }
 
-    public static ArrayList<fbContact> getContactList() {
+    private static Context context;
+    public static void uploadContact(String email, Context context) throws IOException {
+        Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
+        String[] projection = {
+                ContactsContract.CommonDataKinds.Phone.NUMBER,
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                ContactsContract.CommonDataKinds.Phone._ID
+        };
+        String sortOrder = ContactsContract.Contacts.DISPLAY_NAME_PRIMARY + " asc";
+        String condition = ContactsContract.Contacts.HAS_PHONE_NUMBER + "=1";
+        String[] selectionArgs = null;
+
+        Cursor contactCursor = context.getContentResolver().query(
+                uri,
+                projection,
+                condition,
+                selectionArgs,
+                sortOrder
+        );
+
+        while (contactCursor.moveToNext()) {
+            HttpCall.setMethodtext("PUT");
+            HttpCall.setUrltext("/api/"+email+"/addcontact");
+            HttpCall.setNumbertext(contactCursor.getString(0));
+            HttpCall.setNametext(contactCursor.getString(1));
+            Uri img_uri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, Long.parseLong(contactCursor.getString(2)));
+            InputStream input = ContactsContract.Contacts.openContactPhotoInputStream(context.getContentResolver(), img_uri);
+            if (input != null) {
+                Log.d("there is photo", "!!!!!!!!");
+                String tDir = System.getProperty("java.io.tmpdir");
+                f = new File(tDir + "tmp" + ".jpg");
+                OutputStream output = new FileOutputStream(f);
+                IOUtils.copy(input, output);
+                output.close();
+                HttpCall.setProimgfile(f);
+            }
+            HttpCall.getResponse();
+        }
+        contactCursor.close();
+    }
+
+    public static ArrayList<fbContact> getContactListdirect() {
         final ArrayList<fbContact> contact_list = new ArrayList<>();
 
         final GraphRequest graphRequest2 = GraphRequest.newGraphPathRequest(AccessToken.getCurrentAccessToken(), "/me/taggable_friends", new GraphRequest.Callback() {

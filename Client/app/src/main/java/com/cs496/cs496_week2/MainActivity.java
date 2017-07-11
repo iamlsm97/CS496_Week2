@@ -1,6 +1,7 @@
 package com.cs496.cs496_week2;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -51,6 +52,7 @@ import java.util.Arrays;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    Context context = this;
     CallbackManager callbackManager;
     Menu itemMenu;
 
@@ -135,7 +137,7 @@ public class MainActivity extends AppCompatActivity
                     itemMenu.findItem(R.id.nav_login).setVisible(!FacebookUserInfo.isLoggedIn());
                     itemMenu.findItem(R.id.nav_logout).setVisible(FacebookUserInfo.isLoggedIn());
                     try {
-                        FacebookUserInfo.Login();
+                        FacebookUserInfo.Login(context);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -224,7 +226,7 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView;
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         if (FacebookUserInfo.isLoggedIn()) try {
-            FacebookUserInfo.Login();
+            FacebookUserInfo.Login(context);
         } catch (JSONException e) {
             e.printStackTrace();
         }
