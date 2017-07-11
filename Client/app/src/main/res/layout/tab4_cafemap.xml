@@ -13,7 +13,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Write Cafe Name Here"/>
+            android:hint="  Write Cafe Name Here"/>
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -40,7 +40,8 @@
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp">
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="5dp">
 
         <TableRow>
             <TextView
@@ -48,14 +49,20 @@
                 android:text="Name"
                 android:textSize="20sp"
                 android:textColor="#000000"
-                android:textAlignment="textEnd"/>
+                android:textAlignment="textEnd"
+                android:typeface="monospace"/>
             <TextView
-                android:layout_weight="7"
-                android:paddingLeft="10dp"
+                android:layout_weight="5"
+                android:paddingLeft="15dp"
                 android:text="커피앤톡(CNT)"
                 android:textSize="20sp"
                 android:textColor="#444444"/>
         </TableRow>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#cccccc"
+            android:layout_margin="5dp"/>
         <TableRow>
             <TextView
                 android:layout_weight="1"
@@ -63,26 +70,32 @@
                 android:textSize="20sp"
                 android:textColor="#000000"
                 android:textAlignment="textEnd"
-                android:textScaleX=""/>
+                android:typeface="monospace"/>
             <TextView
-                android:layout_weight="7"
-                android:paddingLeft="10dp"
+                android:layout_weight="5"
+                android:paddingLeft="15dp"
                 android:text="11:30~20:00(월~금), 토,일 휴무"
                 android:textSize="18sp"
                 android:textColor="#444444"/>
         </TableRow>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#cccccc"
+            android:layout_margin="5dp"/>
         <TableRow>
             <TextView
                 android:layout_weight="1"
                 android:text="Type"
                 android:textSize="20sp"
                 android:textColor="#000000"
-                android:textAlignment="textEnd"/>
+                android:textAlignment="textEnd"
+                android:typeface="monospace"/>
             <TextView
-                android:layout_weight="7"
-                android:paddingLeft="10dp"
+                android:layout_weight="5"
+                android:paddingLeft="15dp"
                 android:text="Roastery"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:textColor="#444444"/>
         </TableRow>
     </TableLayout>
