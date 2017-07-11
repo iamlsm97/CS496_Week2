@@ -33,12 +33,10 @@ mongoose.connect('mongodb://localhost/CS496_Week2');
 
 // DEFINE MODEL
 let Models = require('./models/user');
+let Cafes = require('./models/cafe')
 
 // [CONFIGURE ROUTER]
-let router = require('./routes')(app, Models, fs, multer)
-
-
-
+let router = require('./routes')(app, Models, Cafes, fs, multer)
 
 // [RUN SERVER]
 let server = app.listen(port, function(){

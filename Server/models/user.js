@@ -21,7 +21,7 @@ var facebookSchema = new Schema({
 }, {versionKey: false})
 
 var gallerySchema = new Schema({
-	gallery: String
+	image: String
 }, {versionKey: false})
 
 

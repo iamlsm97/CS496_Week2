@@ -1,67 +1,31 @@
 // routes/index.js
 
-module.exports = function(app, Models, fs, multer)
+module.exports = function(app, Models, Cafes, fs, multer)
 {
-
-	// -----Test Code-----
-
-	// Download Image from Url Path
-	app.get('/images/*', function(req, res){
-		console.log(__dirname)
-		console.log(req.protocol)
-		console.log(req.get('host'))
-		console.log(req.originalUrl)
-		console.log(req.protocol+"://"+req.get('host')+req.originalUrl)
-		res.download(__dirname + '/..'+req.originalUrl)
-	})
-
-	// Image Test
-	app.post('/image/:filename',  function(req, res){
-		console.log("-----Image Test-----")
-
-		var storage = multer.diskStorage({
-			destination: function(req, file, cb){
-				cb(null, 'rongrong')
-			},
-			filename: function(req, file, cb){
-				file.uploadFile = {
-					name: req.params.filename,
-					ext: file.mimetype.split('/')[1]
-				}
-				cb(null, file.uploadFile.name+'.'+file.uploadFile.ext)
-			}
-		})
-		var upload = multer({storage: storage}).single('testimage')
-
-		upload(req, res, function(err){
-			return
-			console.log("entered upload")
-			if(err) return res.status(500).json({error: err});
-			console.log(req)
-			console.log(req.file)
-		})
-	})
-
-	// multertest
-	app.post('/multertest', function(req, res){
-		console.log("-----multertest-----")
-		console.log(req.body)
-		console.log(req.body.name)
-		var upload = multer().single("rain")
-		upload(req, res, function(err){
-			if (err) console.log("ERROR ERROR ERROR ERROR ERROR");
-			console.log(req.body.number)
-			console.log(req.file)
-		})
-	})
-
-	// -----Test Code-----
-
-
 	// Check Whether Server is Alive
 	app.get('/', function(req, res){
 		console.log("request to /");
 		res.render("index.html");
+	})
+
+	// Show Data of Cafe List
+	app.get('/api/cafelist', function(req, res){
+		console.log("request to /api/cafelist")
+		Cafes.find(function(err, cafes){
+			if (err) return res.status(500).send({error: 'database failure'});
+			res.json(cafes);
+		})
+	})
+
+	// Download Image from Url Path
+	app.get('/images/*', function(req, res){
+		console.log("request to "+req.originalUrl);
+		// console.log(__dirname)
+		// console.log(req.protocol)
+		// console.log(req.get('host'))
+		// console.log(req.originalUrl)
+		// console.log(req.protocol+"://"+req.get('host')+req.originalUrl)
+		res.download(__dirname + '/..'+req.originalUrl)
 	})
 
 	// List Available Requests to Server
@@ -156,7 +120,7 @@ module.exports = function(app, Models, fs, multer)
 	})
 
 	// Add New User
-	app.post('/api/adduser/', function(req, res){
+	app.post('/api/adduser', function(req, res){
 		console.log("request to /api/adduser")
 
 		if (req.body.email == null){
@@ -220,7 +184,6 @@ module.exports = function(app, Models, fs, multer)
 		var upload = multer({storage: storage}).single('profile_image')
 
 		upload(req, res, function(err){
-			console.log("into the upload")
 			if (err) return res.status(500).send({error: err});
 
 			if(req.body.number == ""){ 
@@ -282,15 +245,137 @@ module.exports = function(app, Models, fs, multer)
 
 
 	// Add Facebook to User
-	app.post('/api/addfacebook', function(req, res){
-		console.log("request to /api/addfacebook")
-		res.end()
+	app.put('/api/:email/addfacebook', async function(req, res){
+		console.log("request to /api/"+req.params.email+"/addfacebook")
+
+		email = req.params.email
+
+		var storage = multer.diskStorage({
+			destination: function(req, file, cb){
+				cb(null, 'images/'+email+"/facebook")
+			},
+			filename: function(req, file, cb){
+				file.uploadFile = {
+					name: req.body.id,
+					ext: file.mimetype.split('/')[1]
+				}
+				cb(null, file.uploadFile.name+'.'+file.uploadFile.ext)
+			}
+		})
+
+		var upload = multer({storage: storage}).single('profile_image')
+
+		upload(req, res, function(err){
+			console.log("into the upload")
+			if (err) return res.status(500).send({error: err});
+
+			if (req.body.id == ""){
+				return res.send({error: 'id not found in request'});
+			}
+
+			Models.User.findOne({email: email}, function(err, user){
+				if (err) return res.status(500).send({error: err});
+				if (!user) {
+					return res.send({error: 'no such user exists'});
+				}
+
+				Models.Facebook.findOne({_id: {$in: user.facebook}, id: req.body.id}, function(err, facebook){
+					if (err) return res.status(500).send({error: err});
+					if (!facebook) {
+						console.log("Add New User Facebook Friends")
+						newfacebook = new Models.Facebook()
+						newfacebook.name = req.body.name
+						newfacebook.id = req.body.id
+						if (req.file!=null){
+							console.log(req.file)
+							newfacebook.profile_image = 'images/'+email+"/facebook/"+req.file.uploadFile.name+'.'+req.file.uploadFile.ext
+						}
+						newfacebook.save(function(err){
+							if (err) {
+								console.log(err)
+								res.json({result: 0})
+								return
+							}
+							res.json({result: 1})
+
+						})
+						user.facebook.push(newfacebook._id)
+						user.save()
+					} else {
+						console.log("Edit Existing User Facebook Friends")
+						facebook.id = req.body.id
+						facebook.name = req.body.name
+						if(req.file!=null){
+							console.log(req.file)
+							facebook.profile_image = 'images/'+email+"/facebook/"+req.file.uploadFile.name+'.'+req.file.uploadFile.ext
+						} else {
+							facebook.profile_image = null
+						}
+						
+						contact.save(function(err){
+							if (err) {
+								console.log(err)
+								res.json({result: 0})
+								return
+							}
+							res.json({result: 1})
+						})
+					}
+				})
+			})
+		})
 	})	
 
-	// Add Gallery to User
-	app.post('/api/addgallery', function(req, res){
-		console.log("request to /api/addgallery")
-		res.end()
+	// Add Image to User's Gallery
+	app.post('/api/:email/addimage', function(req, res){
+		console.log("request to /api/"+req.params.email+"/addimage")
+
+		email = req.params.email
+
+		var storage = multer.diskStorage({
+			destination: function(req, file, cb){
+				cb(null, 'images/'+email+"/gallery")
+			},
+			filename: function(req, file, cb){
+				file.fixedname = file.originalname.replace(/\s+/g, '');
+				cb(null, file.fixedname)
+				
+			}
+		})
+
+		var upload = multer({storage: storage}).single('image')
+
+		upload(req, res, function(err){
+
+			if (req.file==null){
+				console.log(req.file)
+				return res.send({error: 'no image attached'});
+			}
+
+			console.log(req.file)
+			if (err) return res.status(500).send({error: err});
+
+			Models.User.findOne({email: email}, function(err, user){
+				if (err) return res.status(500).send({error: err});	
+				if (!user) {
+					return res.send({error: 'no such user exists'});
+				}
+				newimage = new Models.Gallery()
+				newimage.image = 'images/'+email+"/gallery/"+req.file.fixedname
+				newimage.save(function(err){
+					if (err) {
+						console.log(err)
+						res.json({result: 0})
+						return
+					}
+					res.json({result: 1})
+				})
+				user.gallery.push(newimage._id)
+				user.save()
+			})
+		})
+
+
 	})
 
 }
