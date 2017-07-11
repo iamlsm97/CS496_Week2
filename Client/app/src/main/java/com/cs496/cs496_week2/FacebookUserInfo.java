@@ -135,13 +135,13 @@ public class FacebookUserInfo {
                             HttpCall.setMethodtext("GET");
                             HttpCall.setUrltext("/api/"+email+"/contact");
                             JSONArray contactJSONArray = new JSONArray(HttpCall.getResponse());
-                            for (int j=0;j<fbJSONArray.length();j++) {
+                            for (int j=0;j<contactJSONArray.length();j++) {
                                 Contact new_ele = new Contact();
                                 new_ele.name = contactJSONArray.getJSONObject(j).getString("name");
                                 new_ele.number = contactJSONArray.getJSONObject(j).getString("number");
-                                if (contactJSONArray.getJSONObject(j).getString("profile_image") == null)
-                                    new_ele.img_src = null;
-                                else new_ele.img_src = contactJSONArray.getJSONObject(j).getString("profile_image");
+//                                if (contactJSONArray.getJSONObject(j).getString("profile_image") == null)
+//                                    new_ele.img_src = null;
+//                                else new_ele.img_src = contactJSONArray.getJSONObject(j).getString("profile_image");
                                 contactlist.add(new_ele);
                             }
                         } catch (JSONException e) {

@@ -183,34 +183,7 @@ public class Tab1Contacts extends Fragment {
             }
 
             ImageView imageView = (ImageView) v.findViewById(R.id.olaf);
-            if (displayitems.get(position).img_src == null)
-                imageView.setImageResource(R.drawable.olaf);
-            else {
-                Thread thread = new Thread() {
-                    public void run() {
-                        InputStream in = null;
-                        try {
-                            URL url = new URL(displayitems.get(position).img_src);
-                            URLConnection urlConn = url.openConnection();
-                            HttpURLConnection httpConn = (HttpURLConnection) urlConn;
-                            httpConn.connect();
-                            in = httpConn.getInputStream();
-                        } catch (MalformedURLException e) {
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        bitmap = BitmapFactory.decodeStream(in);
-                    }
-                };
-                thread.start();
-                try {
-                    thread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                imageView.setImageBitmap(bitmap);
-            }
+            imageView.setImageResource(R.drawable.olaf);
             imageView.setBackground(new ShapeDrawable(new OvalShape()));
             imageView.setClipToOutline(true);
 
