@@ -77,10 +77,6 @@
                 android:id="@+id/cafe_time"
                 android:layout_weight="5"
                 android:paddingLeft="15dp"
-                android:textScaleX="1"/>
-            <TextView
-                android:layout_weight="7"
-                android:paddingLeft="10dp"
                 android:text="11:30~20:00(월~금), 토,일 휴무"
                 android:textSize="18sp"
                 android:textColor="#444444"/>
