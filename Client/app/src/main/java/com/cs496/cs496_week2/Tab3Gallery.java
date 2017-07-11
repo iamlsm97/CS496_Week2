@@ -1,5 +1,6 @@
 package com.cs496.cs496_week2;
 
+import android.graphics.BitmapFactory;
 import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
@@ -24,8 +25,27 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -69,6 +89,7 @@ public class Tab3Gallery extends Fragment {
     TextView seekText;
     public static ArrayList<File> galleryId = new ArrayList<>();
     ArrayList<String> paths = new ArrayList<>();
+    ArrayList<URL> galleryurl = new ArrayList<>();
 
 
     @Override
@@ -103,13 +124,61 @@ public class Tab3Gallery extends Fragment {
             });
 
             if (galleryId.size() == 0) {
-                int permissionCheck = ContextCompat.checkSelfPermission(this.getActivity(), android.Manifest.permission.READ_EXTERNAL_STORAGE);
-
                 paths = getPathOfAllImages();
                 for (int i = 0; i < paths.size(); i++) {
                     File imgfile = new File(paths.get(i));
                     if (imgfile.exists()) galleryId.add(imgfile);
                 }
+
+                JSONArray DBGallery = null;
+
+                CustomThread thread = new CustomThread();
+                thread.start();
+
+                try {
+                    thread.join();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                DBGallery = thread.getResult();
+                Log.e("jsonarray", DBGallery.toString());
+                for (int i = 0; i < DBGallery.length(); i++) {
+                    JSONObject single = null;
+                    URL imageUrl = null;
+                    File singleFile = null;
+                    try {
+                        single = DBGallery.getJSONObject(i);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    Log.e("single json", single.toString());
+                    try {
+                        imageUrl = new URL("http://13.124.143.15:8080/" + single.getString("image"));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (MalformedURLException e) {
+                        e.printStackTrace();
+                    }
+
+                    Log.e("url in main", imageUrl.toString());
+
+                    galleryurl.add(imageUrl);
+
+//                    GalleryThread gallthread = new GalleryThread(imageUrl);
+//                    gallthread.start();
+//
+//                    try {
+//                        gallthread.join();
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    }
+//
+//                    singleFile = gallthread.getFile();
+//
+//                    galleryId.add(singleFile);
+                }
+
                 gridview = (GridView) view.findViewById(R.id.galleryGridView);
                 gAdapter = new GalleryGridAdapter(getContext());
                 gridview.setAdapter(gAdapter);
@@ -155,7 +224,8 @@ public class Tab3Gallery extends Fragment {
         }
 
         public int getCount() {
-            return galleryId.size();
+            return galleryurl.size();
+//            return galleryId.size();
         }
 
         public Object getItem(int position) {
@@ -188,7 +258,8 @@ public class Tab3Gallery extends Fragment {
 
             //imageView.setImageBitmap(galleryId.get(position));
             Glide.with(getActivity())
-                    .load(galleryId.get(position))
+                    .load(galleryurl.get(position))
+//                    .load(galleryId.get(position))
                     .into(imageview);
 //            imageView.setOnClickListener(new Tab3Gallery_ImageClickListener(mContext, galleryId.get(position)));
 //            return imageView;
@@ -220,7 +291,7 @@ public class Tab3Gallery extends Fragment {
 //            Bitmap image = BitmapFactory.decodeFile(imagePath);
 //            storeImage(image);
 //            gAdapter.notifyDataSetChanged();
-        } else if (requestCode == 622 && resultCode == RESULT_OK && data != null){
+        } else if (requestCode == 622 && resultCode == RESULT_OK && data != null) {
             Uri uri = data.getData();
             Cursor c = getActivity().getContentResolver().query(Uri.parse(uri.toString()), null, null, null, null);
             c.moveToNext();
@@ -238,4 +309,96 @@ public class Tab3Gallery extends Fragment {
 
 
     }
+
+    public class GetGallery {
+        OkHttpClient client = new OkHttpClient();
+
+        String get(String url) throws IOException {
+            Request request = new Request.Builder()
+                    .url(url)
+                    .build();
+
+            Response response = client.newCall(request).execute();
+            return response.body().string();
+
+        }
+    }
+
+    public class CustomThread extends Thread {
+        JSONArray dbGallery = null;
+        final GetGallery example = new GetGallery();
+
+        public CustomThread() {
+            dbGallery = null;
+        }
+
+        @Override
+        public void run() {
+            String response = null;
+            try {
+                response = example.get("http://13.124.143.15:8080/api/rongrong@sparcs.org/gallery");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                dbGallery = new JSONArray(response);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public JSONArray getResult() {
+            return dbGallery;
+        }
+
+    }
+
+    public class GalleryThread extends Thread {
+
+        URL imageurl = null;
+        File file = null;
+
+        public GalleryThread(URL url) {
+            imageurl = url;
+        }
+
+        @Override
+        public void run() {
+            Log.e("url in thread", imageurl.toString());
+            InputStream in = null;
+            try {
+                URLConnection urlConn = imageurl.openConnection();
+                HttpURLConnection httpConn = (HttpURLConnection) urlConn;
+                httpConn.connect();
+                in = httpConn.getInputStream();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            OutputStream outputStream = null;
+            try {
+                outputStream = new FileOutputStream(file);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            try {
+                IOUtils.copy(in, outputStream);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                outputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public File getFile() {
+            return file;
+        }
+
+
+    }
+
 }

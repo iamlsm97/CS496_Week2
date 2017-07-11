@@ -210,7 +210,7 @@ public class MainActivity extends AppCompatActivity
         // primary sections of the activity.
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
-        // Set up the ViewPager with the sections adapter.
+        // Set up the ViewPagertab with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
@@ -290,7 +290,7 @@ public class MainActivity extends AppCompatActivity
                     Tab3Gallery tab3 = new Tab3Gallery();
                     return tab3;
                 case 3:
-                    Tab4 tab4 = new Tab4();
+                    Tab4CafeMap tab4 = new Tab4CafeMap();
                     return tab4;
                 case 4:
                     Tab0HttpTest tab0 = new Tab0HttpTest();
@@ -316,7 +316,7 @@ public class MainActivity extends AppCompatActivity
                 case 2:
                     return "갤러리";
                 case 3:
-                    return "미디어";
+                    return "Cafe Map";
                 case 4:
                     return "Http";
             }
