@@ -1,8 +1,5 @@
 package com.cs496.cs496_week2;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
@@ -12,35 +9,31 @@ import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 
 import com.facebook.AccessToken;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import org.apache.commons.io.FileUtils;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
-import okhttp3.RequestBody;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -57,6 +50,7 @@ public class FacebookUserInfo {
     private static ArrayList<Contact> contactlist = new ArrayList<>();
     private static ArrayList<Cafe> cafelist = new ArrayList<>();
     private static ArrayList<String> cafenamelist = new ArrayList<>();
+
     public static class Cafe {
         String name = new String();
         String time = new String();
@@ -65,10 +59,12 @@ public class FacebookUserInfo {
         String roastery = new String();
         String engname = new String();
     }
+
     public static class fbContact {
         String img_src = "Default";
         String name = "Default";
     }
+
     public static class Contact {
         String img_src = "Default";
         String number = "Default";
@@ -117,12 +113,12 @@ public class FacebookUserInfo {
                     img = object.getJSONObject("picture").getJSONObject("data").getString("url");
                     name = object.getString("name");
                     email = object.getString("email");
-                    if (!userlist.contains("\"email\":\""+email+"\"")) {
+                    if (!userlist.contains("\"email\":\"" + email + "\"")) {
                         HttpCall.setMethodtext("POST");
                         HttpCall.setUrltext("/api/adduser");
-                        HttpCall.setBodytext("{\"email\":\""+email+"\"}");
+                        HttpCall.setBodytext("{\"email\":\"" + email + "\"}");
                         HttpCall.getResponse();
-                        Log.e("not in userlist", "email is "+ email);
+                        Log.e("not in userlist", "email is " + email);
 
                         uploadContact(email, context);
                         uploadGallery(email, context);
@@ -131,25 +127,22 @@ public class FacebookUserInfo {
                         Log.e("already joined", "!");
                         try {
                             HttpCall.setMethodtext("GET");
-                            HttpCall.setUrltext("/api/"+email+"/facebook");
+                            HttpCall.setUrltext("/api/" + email + "/facebook");
                             JSONArray fbJSONArray = new JSONArray(HttpCall.getResponse());
-                            for (int j=0;j<fbJSONArray.length();j++) {
+                            for (int j = 0; j < fbJSONArray.length(); j++) {
                                 fbContact new_ele = new fbContact();
                                 new_ele.name = fbJSONArray.getJSONObject(j).getString("name");
-                                new_ele.img_src = "http://13.124.143.15:8080/"+fbJSONArray.getJSONObject(j).getString("profile_image");
+                                new_ele.img_src = "http://13.124.143.15:8080/" + fbJSONArray.getJSONObject(j).getString("profile_image");
                                 fbcontactlist.add(new_ele);
                             }
 
                             HttpCall.setMethodtext("GET");
-                            HttpCall.setUrltext("/api/"+email+"/contact");
+                            HttpCall.setUrltext("/api/" + email + "/contact");
                             JSONArray contactJSONArray = new JSONArray(HttpCall.getResponse());
-                            for (int j=0;j<contactJSONArray.length();j++) {
+                            for (int j = 0; j < contactJSONArray.length(); j++) {
                                 Contact new_ele = new Contact();
                                 new_ele.name = contactJSONArray.getJSONObject(j).getString("name");
                                 new_ele.number = contactJSONArray.getJSONObject(j).getString("number");
-//                                if (contactJSONArray.getJSONObject(j).getString("profile_image") == null)
-//                                    new_ele.img_src = null;
-//                                else new_ele.img_src = contactJSONArray.getJSONObject(j).getString("profile_image");
                                 contactlist.add(new_ele);
                             }
                         } catch (JSONException e) {
@@ -165,8 +158,6 @@ public class FacebookUserInfo {
         parameters.putString("fields", "id,name,email,picture.type(large)");
         graphRequest.setParameters(parameters);
         graphRequest.executeAsync();
-
-        //fbcontactlist = getContactList();
     }
 
     public static void Logout() {
@@ -184,30 +175,25 @@ public class FacebookUserInfo {
             @Override
             public void onCompleted(GraphResponse response) {
                 JSONObject json = response.getJSONObject();
-                Log.d("request success", ".");
                 try {
                     if (json != null) {
                         final JSONArray jsonArray = json.getJSONArray("data");
                         for (int i = 0; i < jsonArray.length(); i++) {
                             final int k = i;
                             HttpCall.setMethodtext("fbPUT");
-                            HttpCall.setUrltext("/api/"+email+"/addfacebook");
+                            HttpCall.setUrltext("/api/" + email + "/addfacebook");
                             HttpCall.setIdtext(jsonArray.getJSONObject(i).getString("id"));
                             HttpCall.setNametext(jsonArray.getJSONObject(i).getString("name"));
                             f = null;
                             Thread thread = new Thread() {
                                 public void run() {
                                     try {
-                                        Log.d("file is", jsonArray.getJSONObject(k).getJSONObject("picture").getJSONObject("data").getString("url"));
                                         String tDir = System.getProperty("java.io.tmpdir");
-                                        f = new File(tDir+"tmp"+".jpg");
+                                        f = new File(tDir + "tmp" + ".jpg");
                                         FileUtils.copyURLToFile(new URL(jsonArray.getJSONObject(k).getJSONObject("picture").getJSONObject("data").getString("url")), f);
                                         if (f != null) {
                                             HttpCall.setProimgfile(f);
                                             HttpCall.getResponse();
-                                        }
-                                        else {
-                                            Log.d("WHATTHE","AFSDDFASASFD");
                                         }
                                     } catch (JSONException e) {
                                         e.printStackTrace();
@@ -219,20 +205,14 @@ public class FacebookUserInfo {
                                 }
                             };
 
-                            if (f == null) Log.d("!@#$!@#$","ASDFASFD");
-
                             thread.start();
                             thread.join();
-
-                            Log.d("IMG_SOURCE", jsonArray.getJSONObject(i).getJSONObject("picture").getJSONObject("data").getString("url"));
                         }
                         GraphRequest nextRequest = response.getRequestForPagedResults(GraphResponse.PagingDirection.NEXT);
                         if (nextRequest != null) {
                             nextRequest.setCallback(this);
                             nextRequest.executeAsync();
                         }
-                    } else {
-                        Log.d("request fail", ".");
                     }
                 } catch (JSONException e) {
                 } catch (InterruptedException e) {
@@ -267,13 +247,12 @@ public class FacebookUserInfo {
 
         while (contactCursor.moveToNext()) {
             HttpCall.setMethodtext("PUT");
-            HttpCall.setUrltext("/api/"+email+"/addcontact");
+            HttpCall.setUrltext("/api/" + email + "/addcontact");
             HttpCall.setNumbertext(contactCursor.getString(0));
             HttpCall.setNametext(contactCursor.getString(1));
             Uri img_uri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, Long.parseLong(contactCursor.getString(2)));
             InputStream input = ContactsContract.Contacts.openContactPhotoInputStream(context.getContentResolver(), img_uri);
             if (input != null) {
-                Log.d("there is photo", "!!!!!!!!");
                 String tDir = System.getProperty("java.io.tmpdir");
                 f = new File(tDir + "tmp" + ".jpg");
                 OutputStream output = new FileOutputStream(f);
@@ -306,9 +285,6 @@ public class FacebookUserInfo {
                 result.add(absolutePathOfImage);
             }
         }
-        for (String string : result) {
-            Log.e("for loop result", "|" + string + "|");
-        }
         return result;
     }
 
@@ -316,9 +292,6 @@ public class FacebookUserInfo {
         OkHttpClient client = new OkHttpClient();
 
         String post(String url, File file) throws IOException {
-
-            Log.e("post url", url);
-            Log.e("post file", file.toString());
             RequestBody formBody = null;
             String filenameArray[] = file.getName().split("\\.");
             String ext = filenameArray[filenameArray.length - 1];
@@ -327,14 +300,9 @@ public class FacebookUserInfo {
                     .addFormDataPart("image", file.getName(), RequestBody.create(MediaType.parse("image/" + ext), file))
                     .build();
 
-            Log.e("send req", "11111");
-
             Request request = new Request.Builder().url(url).post(formBody).build();
-            Log.e("send req", "22222");
             Response response = client.newCall(request).execute();
-            Log.e("send req", "3333");
             if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
-            Log.e("send req", "4444");
             return response.body().string();
         }
     }
@@ -343,9 +311,7 @@ public class FacebookUserInfo {
 
         ArrayList<String> paths = new ArrayList<>();
         paths = getPathOfAllImages(context);
-//        Log.e("pathlength", String.valueOf(paths.size()));
         for (int i = 0; i < paths.size(); i++) {
-            Log.e("씨발!", "퇴근좀하자");
             final File imgfile = new File(paths.get(i));
             if (imgfile.exists()) {
 
@@ -356,18 +322,14 @@ public class FacebookUserInfo {
                     public void run() {
                         String response = null;
                         try {
-                            Log.e("req file", imgfile.toString());
-                            response = example.post("http://13.124.143.15:8080/api/"+email+"/addimage", imgfile);
+                            response = example.post("http://13.124.143.15:8080/api/" + email + "/addimage", imgfile);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
                 }).start();
-
             }
         }
-
-
     }
 
 
@@ -378,7 +340,6 @@ public class FacebookUserInfo {
             @Override
             public void onCompleted(GraphResponse response) {
                 JSONObject json = response.getJSONObject();
-                Log.d("request success", ".");
                 try {
                     if (json != null) {
                         JSONArray jsonArray = json.getJSONArray("data");
@@ -388,15 +349,12 @@ public class FacebookUserInfo {
                             contact_ele.img_src = jsonArray.getJSONObject(i).getJSONObject("picture").getJSONObject("data").getString("url");
                             File f = new File(jsonArray.getJSONObject(i).getJSONObject("picture").getJSONObject("data").getString("url"));
                             contact_list.add(contact_ele);
-                            Log.d("IMG_SOURCE", jsonArray.getJSONObject(i).getString("id"));
                         }
                         GraphRequest nextRequest = response.getRequestForPagedResults(GraphResponse.PagingDirection.NEXT);
                         if (nextRequest != null) {
                             nextRequest.setCallback(this);
                             nextRequest.executeAsync();
                         }
-                    } else {
-                        Log.d("request fail", ".");
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();

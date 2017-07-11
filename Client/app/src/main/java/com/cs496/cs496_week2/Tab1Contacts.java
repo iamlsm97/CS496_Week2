@@ -4,27 +4,19 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.Signature;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Base64;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,17 +31,9 @@ import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -89,8 +73,7 @@ public class Tab1Contacts extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (!FacebookUserInfo.isLoggedIn()) {
             view = inflater.inflate(R.layout._logout, null);
-        }
-        else {
+        } else {
             view = inflater.inflate(R.layout.tab1_contacts, null);
             ContactArrList = FacebookUserInfo.getContactList();
 
@@ -232,7 +215,6 @@ public class Tab1Contacts extends Fragment {
     }
 
     public class PutContact {
-        //        public final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient();
 
         String put(String url, File file, String name, String number) throws IOException {
@@ -274,7 +256,7 @@ public class Tab1Contacts extends Fragment {
         public void run() {
             String response = null;
             try {
-                response = example.get("http://13.124.143.15:8080/api/"+FacebookUserInfo.getEmail()+"/contact");
+                response = example.get("http://13.124.143.15:8080/api/" + FacebookUserInfo.getEmail() + "/contact");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -289,33 +271,6 @@ public class Tab1Contacts extends Fragment {
             return dbContact;
         }
     }
-
-//    public JSONArray getDBContact(){
-//        final GetContact example = new GetContact();
-//
-//
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                String response = null;
-//                try {
-//                    response = example.get("http://13.124.143.15:8080/api/rongrong@sparcs.org/contact");
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                JSONArray dbContact = null;
-//                try {
-//                    dbContact = new JSONArray(response);
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
-//                Log.e("response", String.valueOf(dbContact.length()));
-//
-//            }
-//        }).start();
-//
-//        return dbContact
-//    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode,

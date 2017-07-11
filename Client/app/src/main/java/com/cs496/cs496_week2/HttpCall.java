@@ -1,20 +1,7 @@
 package com.cs496.cs496_week2;
 
 import android.app.Activity;
-import android.content.Intent;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Bundle;
-import android.provider.MediaStore;
-import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,13 +13,11 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import static android.app.Activity.RESULT_OK;
-
 /**
  * Created by rongrong on 2017-07-10.
  */
 
-public class HttpCall extends Activity{
+public class HttpCall extends Activity {
     private static GetExample getexample = new GetExample();
     private static PostExample postexample = new PostExample();
     private static PutExample putexample = new PutExample();
@@ -106,7 +91,6 @@ public class HttpCall extends Activity{
     }
 
     public static class PutExample {
-        //        public final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient();
 
         String put(String url, File file, String name, String number) throws IOException {
@@ -136,13 +120,11 @@ public class HttpCall extends Activity{
     }
 
     public static class fbPutExample {
-        //        public final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient();
 
         String fbput(String url, File file, String name, String id) throws IOException {
             RequestBody formBody;
             if (file != null) {
-                Log.d("File not null", "afads");
                 String filenameArray[] = file.getName().split("\\.");
                 String ext = filenameArray[filenameArray.length - 1];
                 formBody = new MultipartBody.Builder()
@@ -152,7 +134,6 @@ public class HttpCall extends Activity{
                         .addFormDataPart("profile_image", file.getName(), RequestBody.create(MediaType.parse("image/" + ext), file))
                         .build();
             } else {
-                Log.d("File null", "afads");
                 formBody = new MultipartBody.Builder()
                         .setType(MultipartBody.FORM)
                         .addFormDataPart("name", name)
@@ -171,7 +152,7 @@ public class HttpCall extends Activity{
         Log.d("METHOD", method);
         Log.d("URL", urltext);
         if (method.equals("GET")) {
-           getexample = new GetExample();
+            getexample = new GetExample();
             response = null;
 
             getThread mThread = new getThread();
@@ -284,7 +265,6 @@ public class HttpCall extends Activity{
         public void run() {
             try {
                 response = getexample.run("http://13.124.143.15:8080" + urltext);
-                Log.d("RESPONSE", response);
             } catch (IOException e) {
                 e.printStackTrace();
             }

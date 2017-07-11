@@ -1,7 +1,5 @@
 package com.cs496.cs496_week2;
 
-import android.graphics.BitmapFactory;
-import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -9,7 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.content.ContextCompat;
+import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,7 +23,6 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -77,9 +74,6 @@ public class Tab3Gallery extends Fragment {
             if (!TextUtils.isEmpty(absolutePathOfImage)) {
                 result.add(absolutePathOfImage);
             }
-        }
-        for (String string : result) {
-            Log.e("for loop result", "|" + string + "|");
         }
         return result;
     }
@@ -147,7 +141,6 @@ public class Tab3Gallery extends Fragment {
                     }
 
                     DBGallery = thread.getResult();
-                    Log.e("jsonarray", DBGallery.toString());
                     for (int i = 0; i < DBGallery.length(); i++) {
                         JSONObject single = null;
                         URL imageUrl = null;
@@ -157,7 +150,6 @@ public class Tab3Gallery extends Fragment {
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        Log.e("single json", single.toString());
                         try {
                             imageUrl = new URL("http://13.124.143.15:8080/" + single.getString("image"));
                         } catch (JSONException e) {
@@ -166,22 +158,7 @@ public class Tab3Gallery extends Fragment {
                             e.printStackTrace();
                         }
 
-                        Log.e("url in main", imageUrl.toString());
-
                         galleryurl.add(imageUrl);
-
-//                    GalleryThread gallthread = new GalleryThread(imageUrl);
-//                    gallthread.start();
-//
-//                    try {
-//                        gallthread.join();
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
-//
-//                    singleFile = gallthread.getFile();
-//
-//                    galleryId.add(singleFile);
                     }
 
                     gridview = (GridView) view.findViewById(R.id.galleryGridView);
@@ -232,7 +209,6 @@ public class Tab3Gallery extends Fragment {
 
         public int getCount() {
             return galleryurl.size();
-//            return galleryId.size();
         }
 
         public Object getItem(int position) {
@@ -251,26 +227,9 @@ public class Tab3Gallery extends Fragment {
             ImageView imageview = new ImageView(mContext);
             imageview.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
             imageview.setScaleType(ImageView.ScaleType.CENTER_CROP);
-
-
-//            ImageView imageView;
-//            if (convertView == null) {
-//                imageView = new ImageView(mContext);
-//                imageView.setLayoutParams(new GridView.LayoutParams(400, 400));
-//                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-//                imageView.setPadding(0, 0, 0, 0);
-//            } else {
-//                imageView = (ImageView) convertView;
-//            }
-
-            //imageView.setImageBitmap(galleryId.get(position));
             Glide.with(getActivity())
                     .load(galleryurl.get(position))
-//                    .load(galleryId.get(position))
                     .into(imageview);
-//            imageView.setOnClickListener(new Tab3Gallery_ImageClickListener(mContext, galleryId.get(position)));
-//            return imageView;
-
 
             linear.addView(imageview);
             return linear;
@@ -302,17 +261,12 @@ public class Tab3Gallery extends Fragment {
                 public void run() {
                     String response = null;
                     try {
-                        response = example.post("http://13.124.143.15:8080/api/"+FacebookUserInfo.getEmail()+"/addimage", new File(imagePath));
+                        response = example.post("http://13.124.143.15:8080/api/" + FacebookUserInfo.getEmail() + "/addimage", new File(imagePath));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }).start();
-
-//
-//            Bitmap image = BitmapFactory.decodeFile(imagePath);
-//            storeImage(image);
-//            gAdapter.notifyDataSetChanged();
         } else if (requestCode == 622 && resultCode == RESULT_OK && data != null) {
             Uri uri = data.getData();
             Cursor c = getActivity().getContentResolver().query(Uri.parse(uri.toString()), null, null, null, null);
@@ -324,7 +278,6 @@ public class Tab3Gallery extends Fragment {
             if (uri != null) {
                 File photo = new File(uri.getPath());
                 galleryId.add(photo);
-//                gridview.setAdapter(new galleryGridAdapter(getActivity()));
                 gAdapter.notifyDataSetChanged();
             }
         }
@@ -350,9 +303,6 @@ public class Tab3Gallery extends Fragment {
         OkHttpClient client = new OkHttpClient();
 
         String post(String url, File file) throws IOException {
-
-            Log.e("post url", url);
-            Log.e("post file", file.toString());
             RequestBody formBody = null;
             String filenameArray[] = file.getName().split("\\.");
             String ext = filenameArray[filenameArray.length - 1];
@@ -361,14 +311,9 @@ public class Tab3Gallery extends Fragment {
                     .addFormDataPart("image", file.getName(), RequestBody.create(MediaType.parse("image/" + ext), file))
                     .build();
 
-            Log.e("send req", "11111");
-
             Request request = new Request.Builder().url(url).post(formBody).build();
-            Log.e("send req", "22222");
             Response response = client.newCall(request).execute();
-            Log.e("send req", "3333");
             if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
-            Log.e("send req", "4444");
             return response.body().string();
         }
     }

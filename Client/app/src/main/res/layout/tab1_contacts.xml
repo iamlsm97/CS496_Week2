@@ -31,7 +31,7 @@
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_weight="3"
-                android:background="@android:color/holo_blue_bright"
+                android:backgroundTint="@color/colorAccent"
                 android:text="direct"
                 android:textColor="#FFFFFF" />
 

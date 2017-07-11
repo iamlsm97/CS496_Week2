@@ -6,9 +6,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.OvalShape;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -17,7 +14,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
@@ -74,44 +70,42 @@ public class MainActivity extends AppCompatActivity
     public void Refresh() {
         if (FacebookUserInfo.isLoggedIn()) {
             GraphRequest graphRequest = GraphRequest.newMeRequest(AccessToken.getCurrentAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
-            @Override
-            public void onCompleted(JSONObject object, GraphResponse response) {
-                try {
-                    Log.d("LOGLOG", object.toString());
-                    img = object.getJSONObject("picture").getJSONObject("data").getString("url");
-                    Log.d("img url", img);
-                    name = object.getString("name");
-                    email = object.getString("email");
+                @Override
+                public void onCompleted(JSONObject object, GraphResponse response) {
+                    try {
+                        img = object.getJSONObject("picture").getJSONObject("data").getString("url");
+                        name = object.getString("name");
+                        email = object.getString("email");
 
-                    TextView textView = (TextView) findViewById(R.id.header_text);
-                    TextView textView2 = (TextView) findViewById(R.id.header_text2);
+                        TextView textView = (TextView) findViewById(R.id.header_text);
+                        TextView textView2 = (TextView) findViewById(R.id.header_text2);
 
-                    ImageView imageView = (ImageView) findViewById(R.id.header_image);
-                    if (FacebookUserInfo.isLoggedIn()) {
-                        Thread thread = new Thread() {
-                            public void run() {
-                                try {
-                                    bitmap = BitmapFactory.decodeStream(new URL(img).openStream());
-                                } catch (IOException e) {
-                                    e.printStackTrace();
+                        ImageView imageView = (ImageView) findViewById(R.id.header_image);
+                        if (FacebookUserInfo.isLoggedIn()) {
+                            Thread thread = new Thread() {
+                                public void run() {
+                                    try {
+                                        bitmap = BitmapFactory.decodeStream(new URL(img).openStream());
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
-                            }
-                        };
-                        thread.start();
-                        textView.setText(name);
-                        textView2.setText(email);
-                        thread.join();
-                        imageView.setImageBitmap(bitmap);
+                            };
+                            thread.start();
+                            textView.setText(name);
+                            textView2.setText(email);
+                            thread.join();
+                            imageView.setImageBitmap(bitmap);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
-            }
-        });
-        Bundle parameters = new Bundle();
-        parameters.putString("fields", "id,name,email,picture.type(large)");
-        graphRequest.setParameters(parameters);
-        graphRequest.executeAsync();
+            });
+            Bundle parameters = new Bundle();
+            parameters.putString("fields", "id,name,email,picture.type(large)");
+            graphRequest.setParameters(parameters);
+            graphRequest.executeAsync();
         } else {
             TextView textView = (TextView) findViewById(R.id.header_text);
             TextView textView2 = (TextView) findViewById(R.id.header_text2);
@@ -129,11 +123,10 @@ public class MainActivity extends AppCompatActivity
         callbackManager = CallbackManager.Factory.create();
 
         if (id == R.id.nav_login) {
-            LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile","user_friends","email"));
+            LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile", "user_friends", "email"));
             LoginManager.getInstance().registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
                 @Override
                 public void onSuccess(final LoginResult loginResult) {
-                    Log.e("onSuccess", "onSuccess");
                     itemMenu.findItem(R.id.nav_login).setVisible(!FacebookUserInfo.isLoggedIn());
                     itemMenu.findItem(R.id.nav_logout).setVisible(FacebookUserInfo.isLoggedIn());
                     try {
@@ -160,7 +153,7 @@ public class MainActivity extends AppCompatActivity
             itemMenu.findItem(R.id.nav_logout).setVisible(FacebookUserInfo.isLoggedIn());
             FacebookUserInfo.Logout();
             Refresh();
-        }  else if (id == R.id.nav_share) {
+        } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
 
@@ -236,16 +229,6 @@ public class MainActivity extends AppCompatActivity
 
         navigationView.setNavigationItemSelectedListener(this);
         FacebookUserInfo.uploadCafe();
-        /*
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-          @Override
-          public void onClick(View view) {
-              Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                      .setAction("Action", null).show();
-          }
-        });*/
-
     }
 
 
@@ -325,17 +308,7 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    // deleted PlaceholderFragment class form here
-
-
-
-    /* FUNCTION: requests CALL_PHONE and READ_CONTACTS permissions */
     public void askForPermissions() {
-
-//        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MODE_PRIVATE);
-//        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, MODE_PRIVATE);
-
-        /* CALL PHONE, READ_ CONTACTS, WRITE CONTACTS */
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED
                     || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED

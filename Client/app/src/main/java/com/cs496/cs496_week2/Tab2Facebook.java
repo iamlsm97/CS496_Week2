@@ -20,12 +20,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.facebook.AccessToken;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -91,8 +85,7 @@ public class Tab2Facebook extends Fragment {
             displayitems.clear();
             if (searchText.length() == 0) {
                 displayitems.addAll(items);
-            }
-            else {
+            } else {
                 for (FacebookUserInfo.fbContact item : items) {
                     if (item.name.contains(searchText)) {
                         displayitems.add(item);
@@ -131,7 +124,7 @@ public class Tab2Facebook extends Fragment {
                 v = vi.inflate(R.layout.tab2_contacts_layout, null);
             }
 
-            ImageView imageView = (ImageView)v.findViewById(R.id.profile_img);
+            ImageView imageView = (ImageView) v.findViewById(R.id.profile_img);
 
             Thread thread = new Thread() {
                 public void run() {
@@ -160,7 +153,7 @@ public class Tab2Facebook extends Fragment {
             imageView.setClipToOutline(true);
             imageView.setImageBitmap(bitmap);
 
-            TextView textView1 = (TextView)v.findViewById(R.id.fb_textView);
+            TextView textView1 = (TextView) v.findViewById(R.id.fb_textView);
             textView1.setText(displayitems.get(position).name);
             return v;
         }

@@ -6,7 +6,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,22 +37,6 @@ public class Tab0HttpTest extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.tab0_httptest, container, false);
-
-        /*
-        if (FacebookUserInfo.isLoggedIn()) {
-            try {
-                String accessUrl = "https://graph.facebook.com/me?access_token=";
-                OkHttpClient client = new OkHttpClient();
-                Request request = new Request.Builder()
-                        .url(accessUrl + AccessToken.getCurrentAccessToken().getToken())
-                        .build();
-                Response response = client.newCall(request).execute();
-                Log.d("RESPONSE", response.body().string());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        */
 
         Button httptest = (Button) view.findViewById(R.id.httptest);
         Button getimage = (Button) view.findViewById(R.id.getimage);
@@ -143,7 +126,6 @@ public class Tab0HttpTest extends Fragment {
                         }
                     }).start();
                 }
-
             }
         });
 
@@ -244,7 +226,6 @@ public class Tab0HttpTest extends Fragment {
     }
 
     public class PutExample {
-        //        public final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient();
 
         String put(String url, File file, String name, String number) throws IOException {
