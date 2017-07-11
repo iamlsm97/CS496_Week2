@@ -9,12 +9,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp">
+
         <AutoCompleteTextView
             android:id="@+id/cafe_search"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="  Write Cafe Name Here"/>
+            android:hint="  Write Cafe Name Here" />
+
         <Button
             android:id="@+id/search_cafe_btn"
             android:layout_width="match_parent"
@@ -22,85 +24,102 @@
             android:layout_weight="3"
             android:backgroundTint="@color/colorAccent"
             android:text="Search!"
-            android:textSize="17sp"
+            android:textAllCaps="false"
             android:textColor="@android:color/white"
-            android:textAllCaps="false"/>
+            android:textSize="17sp" />
 
     </LinearLayout>
 
 
     <com.google.android.gms.maps.MapView
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.MapFragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:background="#777777"
-        android:gravity="center_vertical"
-        android:id="@+id/map"
-        android:name="com.google.android.gms.maps.MapFragment"/>
+        android:gravity="center_vertical" />
 
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="5dp">
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="10dp">
 
         <TableRow>
+
             <TextView
                 android:layout_weight="1"
                 android:text="Name"
-                android:textSize="20sp"
-                android:textColor="#000000"
                 android:textAlignment="textEnd"
-                android:typeface="monospace"/>
+                android:textColor="#000000"
+                android:textSize="20sp"
+                android:typeface="monospace" />
+
             <TextView
                 android:id="@+id/cafe_name"
                 android:layout_weight="5"
                 android:paddingLeft="15dp"
                 android:text="커피앤톡(CNT)"
-                android:textSize="20sp"
-                android:textColor="#444444"/>
+                android:textColor="#444444"
+                android:textSize="20sp" />
         </TableRow>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#cccccc"
-            android:layout_margin="5dp"/>
+            android:layout_margin="5dp"
+            android:background="#cccccc" />
+
         <TableRow>
+
             <TextView
                 android:layout_weight="1"
                 android:text="Time"
-                android:textSize="20sp"
-                android:textColor="#000000"
                 android:textAlignment="textEnd"
-                android:typeface="monospace"/>
-            <TextView
-                android:id="@+id/cafe_time"
+                android:textColor="#000000"
+                android:textSize="20sp"
+                android:typeface="monospace" />
+
+            <HorizontalScrollView
                 android:layout_weight="5"
-                android:paddingLeft="15dp"
-                android:text="11:30~20:00(월~금), 토,일 휴무"
-                android:textSize="18sp"
-                android:textColor="#444444"/>
+                android:paddingLeft="15dp">
+
+                <TextView
+                    android:id="@+id/cafe_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+
+                    android:text="11:30~20:00(월~금), 토,일 휴무"
+                    android:textColor="#444444"
+                    android:textSize="18sp" />
+            </HorizontalScrollView>
+
         </TableRow>
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#cccccc"
-            android:layout_margin="5dp"/>
+            android:layout_margin="5dp"
+            android:background="#cccccc" />
+
         <TableRow>
+
             <TextView
                 android:layout_weight="1"
                 android:text="Type"
-                android:textSize="20sp"
-                android:textColor="#000000"
                 android:textAlignment="textEnd"
-                android:typeface="monospace"/>
+                android:textColor="#000000"
+                android:textSize="20sp"
+                android:typeface="monospace" />
+
             <TextView
-                android:layout_weight="5"
                 android:id="@+id/cafe_type"
+                android:layout_weight="5"
                 android:paddingLeft="15dp"
                 android:text="Roastery"
-                android:textSize="18sp"
-                android:textColor="#444444"/>
+                android:textColor="#444444"
+                android:textSize="18sp" />
         </TableRow>
     </TableLayout>
 

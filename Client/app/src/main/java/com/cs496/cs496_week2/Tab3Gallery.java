@@ -43,8 +43,11 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import static android.app.Activity.RESULT_OK;
@@ -95,75 +98,77 @@ public class Tab3Gallery extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        if (view == null) {
+        if (!FacebookUserInfo.isLoggedIn()) {
+            view = inflater.inflate(R.layout._logout, null);
+        } else {
+            if (view == null) {
+                view = inflater.inflate(R.layout.tab3_gallery, container, false);
+                seekBar = view.findViewById(R.id.gall_seekbar);
+                seekText = view.findViewById(R.id.gall_seekcnt);
 
-            view = inflater.inflate(R.layout.tab3_gallery, container, false);
-            seekBar = view.findViewById(R.id.gall_seekbar);
-            seekText = view.findViewById(R.id.gall_seekcnt);
+                FloatingActionButton FABAddImg = view.findViewById(R.id.fab_add);
+                FloatingActionButton FABCamera = view.findViewById(R.id.fab_cam);
 
-            FloatingActionButton FABAddImg = view.findViewById(R.id.fab_add);
-            FloatingActionButton FABCamera = view.findViewById(R.id.fab_cam);
-
-            FABAddImg.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent(Intent.ACTION_PICK);
-                    intent.setType("image/*");
-                    startActivityForResult(intent, 621);
-                }
-            });
-
-            FABCamera.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT, MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString());
-                    intent.putExtra("return-data", true);
-                    startActivityForResult(intent, 622);
-                }
-            });
-
-            if (galleryId.size() == 0) {
-                paths = getPathOfAllImages();
-                for (int i = 0; i < paths.size(); i++) {
-                    File imgfile = new File(paths.get(i));
-                    if (imgfile.exists()) galleryId.add(imgfile);
-                }
-
-                JSONArray DBGallery = null;
-
-                CustomThread thread = new CustomThread();
-                thread.start();
-
-                try {
-                    thread.join();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                DBGallery = thread.getResult();
-                Log.e("jsonarray", DBGallery.toString());
-                for (int i = 0; i < DBGallery.length(); i++) {
-                    JSONObject single = null;
-                    URL imageUrl = null;
-                    File singleFile = null;
-                    try {
-                        single = DBGallery.getJSONObject(i);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                FABAddImg.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent intent = new Intent(Intent.ACTION_PICK);
+                        intent.setType("image/*");
+                        startActivityForResult(intent, 621);
                     }
-                    Log.e("single json", single.toString());
+                });
+
+                FABCamera.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT, MediaStore.Images.Media.EXTERNAL_CONTENT_URI.toString());
+                        intent.putExtra("return-data", true);
+                        startActivityForResult(intent, 622);
+                    }
+                });
+
+                if (galleryId.size() == 0) {
+                    paths = getPathOfAllImages();
+                    for (int i = 0; i < paths.size(); i++) {
+                        File imgfile = new File(paths.get(i));
+                        if (imgfile.exists()) galleryId.add(imgfile);
+                    }
+
+                    JSONArray DBGallery = null;
+
+                    CustomThread thread = new CustomThread();
+                    thread.start();
+
                     try {
-                        imageUrl = new URL("http://13.124.143.15:8080/" + single.getString("image"));
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    } catch (MalformedURLException e) {
+                        thread.join();
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
 
-                    Log.e("url in main", imageUrl.toString());
+                    DBGallery = thread.getResult();
+                    Log.e("jsonarray", DBGallery.toString());
+                    for (int i = 0; i < DBGallery.length(); i++) {
+                        JSONObject single = null;
+                        URL imageUrl = null;
+                        File singleFile = null;
+                        try {
+                            single = DBGallery.getJSONObject(i);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        Log.e("single json", single.toString());
+                        try {
+                            imageUrl = new URL("http://13.124.143.15:8080/" + single.getString("image"));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        } catch (MalformedURLException e) {
+                            e.printStackTrace();
+                        }
 
-                    galleryurl.add(imageUrl);
+                        Log.e("url in main", imageUrl.toString());
+
+                        galleryurl.add(imageUrl);
 
 //                    GalleryThread gallthread = new GalleryThread(imageUrl);
 //                    gallthread.start();
@@ -177,37 +182,39 @@ public class Tab3Gallery extends Fragment {
 //                    singleFile = gallthread.getFile();
 //
 //                    galleryId.add(singleFile);
-                }
+                    }
 
-                gridview = (GridView) view.findViewById(R.id.galleryGridView);
-                gAdapter = new GalleryGridAdapter(getContext());
-                gridview.setAdapter(gAdapter);
-
-            }
-
-            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                @Override
-                public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                    Integer seek_cnt = seekBar.getProgress() + 1;
-                    String seek_text = String.valueOf(seek_cnt) + " in a row";
-                    seekText.setText(seek_text);
-                    gridview.setNumColumns(seek_cnt);
-                }
-
-                @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {
+                    gridview = (GridView) view.findViewById(R.id.galleryGridView);
+                    gAdapter = new GalleryGridAdapter(getContext());
+                    gridview.setAdapter(gAdapter);
 
                 }
 
-                @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {
 
+                seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                        Integer seek_cnt = seekBar.getProgress() + 1;
+                        String seek_text = String.valueOf(seek_cnt) + " in a row";
+                        seekText.setText(seek_text);
+                        gridview.setNumColumns(seek_cnt);
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+
+                    }
+                });
+            } else {
+                ViewGroup pVG = (ViewGroup) view.getParent();
+                if (pVG != null) {
+                    pVG.removeView(view);
                 }
-            });
-        } else {
-            ViewGroup pVG = (ViewGroup) view.getParent();
-            if (pVG != null) {
-                pVG.removeView(view);
             }
         }
 
@@ -279,14 +286,29 @@ public class Tab3Gallery extends Fragment {
 
             Toast.makeText(getContext(), "Added Image to Gallery", Toast.LENGTH_LONG).show();
 
-//            // Let's read picked image data - its URI
-//            Uri uri = data.getData();
-//            // Let's read picked image path using content resolver
-//            String[] filePath = {MediaStore.Images.Media.DATA};
-//            Cursor cursor = getContext().getContentResolver().query(uri, filePath, null, null, null);
-//            cursor.moveToFirst();
-//            String imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]));
-//            cursor.close();
+            // Let's read picked image data - its URI
+            Uri uri = data.getData();
+            // Let's read picked image path using content resolver
+            String[] filePath = {MediaStore.Images.Media.DATA};
+            Cursor cursor = getContext().getContentResolver().query(uri, filePath, null, null, null);
+            cursor.moveToFirst();
+            final String imagePath = cursor.getString(cursor.getColumnIndex(filePath[0]));
+            cursor.close();
+
+            final PostImage example = new PostImage();
+
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String response = null;
+                    try {
+                        response = example.post("http://13.124.143.15:8080/api/"+FacebookUserInfo.getEmail()+"/addimage", new File(imagePath));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+
 //
 //            Bitmap image = BitmapFactory.decodeFile(imagePath);
 //            storeImage(image);
@@ -324,6 +346,33 @@ public class Tab3Gallery extends Fragment {
         }
     }
 
+    public static class PostImage {
+        OkHttpClient client = new OkHttpClient();
+
+        String post(String url, File file) throws IOException {
+
+            Log.e("post url", url);
+            Log.e("post file", file.toString());
+            RequestBody formBody = null;
+            String filenameArray[] = file.getName().split("\\.");
+            String ext = filenameArray[filenameArray.length - 1];
+            formBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("image", file.getName(), RequestBody.create(MediaType.parse("image/" + ext), file))
+                    .build();
+
+            Log.e("send req", "11111");
+
+            Request request = new Request.Builder().url(url).post(formBody).build();
+            Log.e("send req", "22222");
+            Response response = client.newCall(request).execute();
+            Log.e("send req", "3333");
+            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            Log.e("send req", "4444");
+            return response.body().string();
+        }
+    }
+
     public class CustomThread extends Thread {
         JSONArray dbGallery = null;
         final GetGallery example = new GetGallery();
@@ -336,7 +385,7 @@ public class Tab3Gallery extends Fragment {
         public void run() {
             String response = null;
             try {
-                response = example.get("http://13.124.143.15:8080/api/rongrong@sparcs.org/gallery");
+                response = example.get("http://13.124.143.15:8080/api/" + FacebookUserInfo.getEmail() + "/gallery");
             } catch (IOException e) {
                 e.printStackTrace();
             }
