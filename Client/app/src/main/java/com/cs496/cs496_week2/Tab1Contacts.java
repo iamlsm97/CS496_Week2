@@ -134,8 +134,6 @@ public class Tab1Contacts extends Fragment {
             adapter.notifyDataSetChanged();
         }
 
-
-
         return view;
     }
 

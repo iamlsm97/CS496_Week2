@@ -7,23 +7,10 @@
     android:orientation="vertical"
     tools:context="com.cs496.cs496_week2.MainActivity">
 
-    <TextView
-        android:id="@+id/asdf"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello!!!"/>
-
-    <TextView
-        android:id="@+id/asdf2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello!!!"/>
-
-    <ImageView
-        android:id="@+id/asdf3"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/camera"/>
+    <com.google.android.gms.maps.MapView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.MapFragment" />
 
 </LinearLayout>

@@ -9,12 +9,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp">
-        <EditText
+        <AutoCompleteTextView
+            android:id="@+id/cafe_search"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="  Write Cafe Name Here"/>
         <Button
+            android:id="@+id/search_cafe_btn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="3"
@@ -27,15 +29,14 @@
     </LinearLayout>
 
 
-    <TextView
+    <com.google.android.gms.maps.MapView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:background="#777777"
         android:gravity="center_vertical"
-        android:text="Google Map Here"
-        android:textSize="30sp"
-        android:textAlignment="center"/>
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.MapFragment"/>
 
     <TableLayout
         android:layout_width="match_parent"
@@ -52,6 +53,7 @@
                 android:textAlignment="textEnd"
                 android:typeface="monospace"/>
             <TextView
+                android:id="@+id/cafe_name"
                 android:layout_weight="5"
                 android:paddingLeft="15dp"
                 android:text="커피앤톡(CNT)"
@@ -72,8 +74,13 @@
                 android:textAlignment="textEnd"
                 android:typeface="monospace"/>
             <TextView
+                android:id="@+id/cafe_time"
                 android:layout_weight="5"
                 android:paddingLeft="15dp"
+                android:textScaleX="1"/>
+            <TextView
+                android:layout_weight="7"
+                android:paddingLeft="10dp"
                 android:text="11:30~20:00(월~금), 토,일 휴무"
                 android:textSize="18sp"
                 android:textColor="#444444"/>
@@ -93,6 +100,7 @@
                 android:typeface="monospace"/>
             <TextView
                 android:layout_weight="5"
+                android:id="@+id/cafe_type"
                 android:paddingLeft="15dp"
                 android:text="Roastery"
                 android:textSize="18sp"

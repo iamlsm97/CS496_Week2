@@ -47,6 +47,16 @@ public class FacebookUserInfo {
     private static String img;
     private static ArrayList<fbContact> fbcontactlist = new ArrayList<>();
     private static ArrayList<Contact> contactlist = new ArrayList<>();
+    private static ArrayList<Cafe> cafelist = new ArrayList<>();
+    private static ArrayList<String> cafenamelist = new ArrayList<>();
+    public static class Cafe {
+        String name = new String();
+        String time = new String();
+        double lat;
+        double lng;
+        String roastery = new String();
+        String engname = new String();
+    }
     public static class fbContact {
         String img_src = "Default";
         String name = "Default";
@@ -106,8 +116,8 @@ public class FacebookUserInfo {
                         HttpCall.getResponse();
                         Log.e("not in userlist", "email is "+ email);
 
-                        uploadFacebookContact(email);
                         uploadContact(email, context);
+                        uploadFacebookContact(email);
                     } else {
                         uploadContact(email, context);
                         Log.e("already joined", "!");
@@ -304,5 +314,41 @@ public class FacebookUserInfo {
         graphRequest2.executeAsync();
 
         return contact_list;
+    }
+
+    public static ArrayList<Cafe> getCafeList() {
+        return cafelist;
+    }
+
+    public static ArrayList<String> getCafeNameList() {
+        return cafenamelist;
+    }
+
+    public static void uploadCafe() {
+        HttpCall.setMethodtext("GET");
+        HttpCall.setUrltext("/api/cafelist");
+        JSONArray JSONcafe = new JSONArray();
+        try {
+            JSONcafe = new JSONArray(HttpCall.getResponse());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        for (int i = 0; i < JSONcafe.length(); i++) {
+            Cafe cafe_ele = new Cafe();
+            try {
+                cafe_ele.name = JSONcafe.getJSONObject(i).getString("name");
+                cafe_ele.engname = JSONcafe.getJSONObject(i).getString("engname");
+                cafe_ele.time = JSONcafe.getJSONObject(i).getString("time");
+                cafe_ele.lat = JSONcafe.getJSONObject(i).getDouble("lat");
+                cafe_ele.lng = JSONcafe.getJSONObject(i).getDouble("lng");
+                cafe_ele.roastery = JSONcafe.getJSONObject(i).getString("roastery");
+                Log.d("add success", cafe_ele.name);
+                cafelist.add(cafe_ele);
+                cafenamelist.add(cafe_ele.name);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
