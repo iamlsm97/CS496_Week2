@@ -130,9 +130,11 @@ public class Tab1Contacts extends Fragment {
                 listview.setAdapter(adapter);
 
             btnAdd.setOnClickListener(btnAddListener);
+
+            adapter.notifyDataSetChanged();
         }
 
-        adapter.notifyDataSetChanged();
+
 
         return view;
     }

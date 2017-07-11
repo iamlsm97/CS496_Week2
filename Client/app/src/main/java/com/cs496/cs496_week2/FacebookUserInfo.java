@@ -109,6 +109,7 @@ public class FacebookUserInfo {
                         uploadFacebookContact(email);
                         uploadContact(email, context);
                     } else {
+                        uploadContact(email, context);
                         Log.e("already joined", "!");
                         try {
                             HttpCall.setMethodtext("GET");

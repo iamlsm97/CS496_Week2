@@ -1,15 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp">
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Write Cafe Name Here"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="3"
+            android:backgroundTint="@color/colorAccent"
+            android:text="Search!"
+            android:textSize="17sp"
+            android:textColor="@android:color/white"
+            android:textAllCaps="false"/>
+
+    </LinearLayout>
+
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="200dp"
-        android:text="CafeMap OPEN Soon!"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#777777"
+        android:gravity="center_vertical"
+        android:text="Google Map Here"
         android:textSize="30sp"
-        android:textColor="@color/colorAccent"/>
+        android:textAlignment="center"/>
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp">
+
+        <TableRow>
+            <TextView
+                android:layout_weight="1"
+                android:text="Name"
+                android:textSize="20sp"
+                android:textColor="#000000"
+                android:textAlignment="textEnd"/>
+            <TextView
+                android:layout_weight="7"
+                android:paddingLeft="10dp"
+                android:text="커피앤톡(CNT)"
+                android:textSize="20sp"
+                android:textColor="#444444"/>
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_weight="1"
+                android:text="Time"
+                android:textSize="20sp"
+                android:textColor="#000000"
+                android:textAlignment="textEnd"
+                android:textScaleX=""/>
+            <TextView
+                android:layout_weight="7"
+                android:paddingLeft="10dp"
+                android:text="11:30~20:00(월~금), 토,일 휴무"
+                android:textSize="18sp"
+                android:textColor="#444444"/>
+        </TableRow>
+        <TableRow>
+            <TextView
+                android:layout_weight="1"
+                android:text="Type"
+                android:textSize="20sp"
+                android:textColor="#000000"
+                android:textAlignment="textEnd"/>
+            <TextView
+                android:layout_weight="7"
+                android:paddingLeft="10dp"
+                android:text="Roastery"
+                android:textSize="20sp"
+                android:textColor="#444444"/>
+        </TableRow>
+    </TableLayout>
 
 </LinearLayout>
